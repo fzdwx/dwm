@@ -455,7 +455,7 @@ applyrules(Client *c)
     if (!strcmp(c->name, scratchpadname)) {
         c->isscratchpad = 1;
         c->isglobal = 1; // scratchpad is default global
-    } 
+    }
     if (ch.res_class)
         XFree(ch.res_class);
     if (ch.res_name)
@@ -598,7 +598,7 @@ buttonpress(XEvent *e)
     if (ev->window == selmon->barwin || (!c && selmon->showbar && (topbar ? ev->y <= selmon->wy : ev->y >= selmon->wy + selmon->wh))) { // 点击在bar上
         i = x = 0;
         blw = TEXTW(selmon->ltsymbol);
-        
+
         if (selmon->isoverview) {
             x += TEXTW(overviewtag);
             i = ~0;
@@ -1895,11 +1895,11 @@ movewin(const Arg *arg)
             top = c->y;
             ny -= c->mon->wh / 4;
             for (tc = c->mon->clients; tc; tc = tc->next) {
-                // 若浮动tc c的顶边会穿过tc的底边 
+                // 若浮动tc c的顶边会穿过tc的底边
                 if (!ISVISIBLE(tc) || !tc->isfloating || tc == c) continue;
                 if (c->x + WIDTH(c) < tc->x || c->x > tc->x + WIDTH(tc)) continue;
-                buttom = tc->y + HEIGHT(tc) + gappi;  
-                if (top > buttom && ny < buttom) {  
+                buttom = tc->y + HEIGHT(tc) + gappi;
+                if (top > buttom && ny < buttom) {
                     tar = MAX(tar, buttom);
                 };
             }
@@ -1911,11 +1911,11 @@ movewin(const Arg *arg)
             buttom = c->y + HEIGHT(c);
             ny += c->mon->wh / 4;
             for (tc = c->mon->clients; tc; tc = tc->next) {
-                // 若浮动tc c的底边会穿过tc的顶边 
+                // 若浮动tc c的底边会穿过tc的顶边
                 if (!ISVISIBLE(tc) || !tc->isfloating || tc == c) continue;
                 if (c->x + WIDTH(c) < tc->x || c->x > tc->x + WIDTH(tc)) continue;
                 top = tc->y - gappi;
-                if (buttom < top && (ny + HEIGHT(c)) > top) {  
+                if (buttom < top && (ny + HEIGHT(c)) > top) {
                     tar = MIN(tar, top - HEIGHT(c));
                 };
             }
@@ -1927,7 +1927,7 @@ movewin(const Arg *arg)
             left = c->x;
             nx -= c->mon->ww / 6;
             for (tc = c->mon->clients; tc; tc = tc->next) {
-                // 若浮动tc c的左边会穿过tc的右边 
+                // 若浮动tc c的左边会穿过tc的右边
                 if (!ISVISIBLE(tc) || !tc->isfloating || tc == c) continue;
                 if (c->y + HEIGHT(c) < tc->y || c->y > tc->y + HEIGHT(tc)) continue;
                 right = tc->x + WIDTH(tc) + gappi;
@@ -1943,7 +1943,7 @@ movewin(const Arg *arg)
             right = c->x + WIDTH(c);
             nx += c->mon->ww / 6;
             for (tc = c->mon->clients; tc; tc = tc->next) {
-                // 若浮动tc c的右边会穿过tc的左边 
+                // 若浮动tc c的右边会穿过tc的左边
                 if (!ISVISIBLE(tc) || !tc->isfloating || tc == c) continue;
                 if (c->y + HEIGHT(c) < tc->y || c->y > tc->y + HEIGHT(tc)) continue;
                 left = tc->x - gappi;
@@ -1979,7 +1979,7 @@ resizewin(const Arg *arg)
             right = c->x + WIDTH(c);
             nw += selmon->ww / 16;
             for (tc = c->mon->clients; tc; tc = tc->next) {
-                // 若浮动tc c的右边会穿过tc的左边 
+                // 若浮动tc c的右边会穿过tc的左边
                 if (!ISVISIBLE(tc) || !tc->isfloating || tc == c) continue;
                 if (c->y + HEIGHT(c) < tc->y || c->y > tc->y + HEIGHT(tc)) continue;
                 left = tc->x - gappi;
@@ -2000,11 +2000,11 @@ resizewin(const Arg *arg)
             buttom = c->y + HEIGHT(c);
             nh += selmon->wh / 8;
             for (tc = c->mon->clients; tc; tc = tc->next) {
-                // 若浮动tc c的底边会穿过tc的顶边 
+                // 若浮动tc c的底边会穿过tc的顶边
                 if (!ISVISIBLE(tc) || !tc->isfloating || tc == c) continue;
                 if (c->x + WIDTH(c) < tc->x || c->x > tc->x + WIDTH(tc)) continue;
                 top = tc->y - gappi;
-                if (buttom < top && (c->y + nh) > top) {  
+                if (buttom < top && (c->y + nh) > top) {
                     tar = MAX(tar, top - c->y - 2 * c->bw);
                 };
             }
