@@ -2,6 +2,7 @@
 
 static int showsystray                   = 1;         /* 是否显示托盘栏 */
 static const int newclientathead         = 0;         /* 定义新窗口在栈顶还是栈底 */
+static const unsigned int snap      = 32;
 static const unsigned int borderpx       = 2;         /* 窗口边框大小 */
 static const unsigned int systraypinning = 1;         /* 托盘跟随的显示器 0代表不指定显示器 */
 static const unsigned int systrayspacing = 1;         /* 托盘间距 */
@@ -52,7 +53,9 @@ static const Layout overviewlayout = { "",  overview };
 static const char *termcmd[]  = { "wezterm", NULL };
 /* 自定义布局 */
 static const Layout layouts[] = {
-    { "﬿",  tile },         /* 主次栈 */
+{ "﬿",  tile },         /* 主次栈 */
+    { "[]=",      tile },    /* first entry is default */
+ 	{ "><>",      NULL },    /* no layout function means floating behavior */
     { "﩯",  magicgrid },    /* 网格 */
 };
 
@@ -67,7 +70,7 @@ static Key keys[] = {
     /* modifier            key              function          argument */
     { MODKEY,              XK_equal,        togglesystray,    {0} },                     /* super +            |  切换 托盘栏显示状态 */
 
-    { MODKEY,              XK_Tab,          focusstack,       {.i = +1} },               /* super tab          |  本tag内切换聚焦窗口 */
+    { Mod1Mask,              XK_Tab,          focusstack,       {.i = +1} },               /* super tab          |  本tag内切换聚焦窗口 */
     { MODKEY,              XK_Up,           focusstack,       {.i = -1} },               /* super up           |  本tag内切换聚焦窗口 */
     { MODKEY,              XK_Down,         focusstack,       {.i = +1} },               /* super down         |  本tag内切换聚焦窗口 */
 
@@ -84,7 +87,7 @@ static Key keys[] = {
     { MODKEY,              XK_h,            hidewin,          {0} },                     /* super h            |  隐藏 窗口 */
     { MODKEY|ShiftMask,    XK_h,            restorewin,       {0} },                     /* super shift h      |  取消隐藏 窗口 */
 
-    { MODKEY|ShiftMask,    XK_Return,       zoom,             {0} },                     /* super shift enter  |  将当前聚焦窗口置为主窗口 */
+    { MODKEY,    XK_Return,       zoom,             {0} },                     /* super shift enter  |  将当前聚焦窗口置为主窗口 */
 
     { MODKEY,              XK_t,            togglefloating,   {0} },                     /* super t            |  开启/关闭 聚焦目标的float模式 */
     { MODKEY|ShiftMask,    XK_t,            toggleallfloating,{0} },                     /* super shift t      |  开启/关闭 全部目标的float模式 */
@@ -92,8 +95,8 @@ static Key keys[] = {
     { MODKEY|ShiftMask,    XK_f,            togglebar,        {0} },                     /* super shift f      |  开启/关闭 状态栏 */
     { MODKEY,              XK_e,            incnmaster,       {.i = +1} },               /* super e            |  改变主工作区窗口数量 (1 2中切换) */
 
-    { MODKEY,              XK_b,            focusmon,         {.i = +1} },               /* super b            |  光标移动到另一个显示器 */
-    { MODKEY|ShiftMask,    XK_b,            tagmon,           {.i = +1} },               /* super shift b      |  将聚焦窗口移动到另一个显示器 */
+    { MODKEY,              XK_x,            focusmon,         {.i = +1} },               /* super b            |  光标移动到另一个显示器 */
+    { MODKEY|ShiftMask,    XK_x,            tagmon,           {.i = +1} },               /* super shift b      |  将聚焦窗口移动到另一个显示器 */
 
     { MODKEY,              XK_q,            killclient,       {0} },                     /* super q            |  关闭窗口 */
     { MODKEY|ControlMask,  XK_F12,          quit,             {0} },                     /* super ctrl f12     |  退出dwm */
@@ -101,8 +104,7 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,    XK_space,        selectlayout,     {.v = &layouts[1]} },      /* super shift space  |  切换到网格布局 */
 	{ MODKEY,              XK_o,            showonlyorall,    {0} },                     /* super o            |  切换 只显示一个窗口 / 全部显示 */
 
-    { MODKEY|ControlMask,  XK_equal,        setgap,           {.i = -6} },               /* super ctrl
-     up      |  窗口增大 */
+    { MODKEY|ControlMask,  XK_equal,        setgap,           {.i = -6} },               /* super ctrl up      |  窗口增大 */
     { MODKEY|ControlMask,  XK_minus,        setgap,           {.i = +6} },               /* super ctrl down    |  窗口减小 */
     { MODKEY|ControlMask,  XK_space,        setgap,           {.i = 0} },                /* super ctrl space   |  窗口重置 */
 
@@ -118,16 +120,7 @@ static Key keys[] = {
 
 	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
     /* spawn + SHCMD 执行对应命令 */
-    { MODKEY|ShiftMask,    XK_a,            spawn,            SHCMD("flameshot gui") },
     { Mod1Mask,            XK_space,        spawn,            SHCMD("rofi -show") },     /* alt space | rofi */
-    { MODKEY|ShiftMask,    XK_k,            spawn,            SHCMD("~/dwm/scripts/app-starter.sh screenkey") },
-    { MODKEY,              XK_k,            spawn,            SHCMD("~/dwm/scripts/app-starter.sh blurlock") },
-    { MODKEY,              XK_F1,           spawn,            SHCMD("~/dwm/scripts/app-starter.sh filemanager") },
-    { MODKEY|ShiftMask,    XK_Up,           spawn,            SHCMD("~/dwm/scripts/app-starter.sh set_vol up &") },
-    { MODKEY|ShiftMask,    XK_Down,         spawn,            SHCMD("~/dwm/scripts/app-starter.sh set_vol down &") },
-    { MODKEY,              XK_j,            spawn,            SHCMD("~/dwm/scripts/app-starter.sh robot") },
-    { MODKEY|ShiftMask,    XK_j,            spawn,            SHCMD("~/dwm/scripts/app-starter.sh robot onlyclick") },
-    { ShiftMask|ControlMask, XK_c,          spawn,            SHCMD("xclip -o | xclip -selection c") },
 
     /* super key : 跳转到对应tag */
     /* super shift key : 将聚焦窗口移动到对应tag */
