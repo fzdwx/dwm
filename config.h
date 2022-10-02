@@ -2,10 +2,9 @@
 
 static int showsystray                   = 1;         /* 是否显示托盘栏 */
 static const int newclientathead         = 0;         /* 定义新窗口在栈顶还是栈底 */
-static const unsigned int snap      = 32;
 static const unsigned int borderpx       = 2;         /* 窗口边框大小 */
 static const unsigned int systraypinning = 1;         /* 托盘跟随的显示器 0代表不指定显示器 */
-static const unsigned int systrayspacing = 1;         /* 托盘间距 */
+static const unsigned int systrayspacing = 3;         /* 托盘间距 */
 static int gappi                         = 12;        /* 窗口与窗口 缝隙大小 */
 static int gappo                         = 12;        /* 窗口与边缘 缝隙大小 */
 static const int _gappo                  = 12;        /* 窗口与窗口 缝隙大小 不可变 用于恢复时的默认值 */
@@ -16,10 +15,10 @@ static const int showbar                 = 1;         /* 是否显示状态栏 *
 static const int topbar                  = 1;         /* 指定状态栏位置 0底部 1顶部 */
 static const float mfact                 = 0.6;       /* 主工作区 大小比例 */
 static const int   nmaster               = 1;         /* 主工作区 窗口数量 */
-static const unsigned int snap           = 10;        /* 边缘依附宽度 */
+static const unsigned int snap           = 32;        /* 边缘依附宽度 */
 static const unsigned int baralpha       = 0xc0;      /* 状态栏透明度 */
 static const unsigned int borderalpha    = 0xdd;      /* 边框透明度 */
-static const char *fonts[]               = { "JetBrainsMono Nerd Font:style=medium:size=13", "monospace:size=13" };
+static const char *fonts[]               = { "JetBrainsMono Nerd Font:style=medium:size=14", "monospace:size=14" };
 static const char *colors[][3]           = { [SchemeNorm] = { "#bbbbbb", "#333333", "#444444" }, [SchemeSel] = { "#ffffff", "#37474F", "#42A5F5" }, [SchemeHid] = { "#dddddd", NULL, NULL }, [SchemeSystray] = { "#7799AA", "#7799AA", "#7799AA" }, [SchemeUnderline] = { "#7799AA", "#7799AA", "#7799AA" } };
 static const unsigned int alphas[][3]    = { [SchemeNorm] = { OPAQUE, baralpha, borderalpha }, [SchemeSel] = { OPAQUE, baralpha, borderalpha } };
 
@@ -54,9 +53,7 @@ static const char *termcmd[]  = { "wezterm", NULL };
 /* 自定义布局 */
 static const Layout layouts[] = {
 { "﬿",  tile },         /* 主次栈 */
-    { "[]=",      tile },    /* first entry is default */
- 	{ "><>",      NULL },    /* no layout function means floating behavior */
-    { "﩯",  magicgrid },    /* 网格 */
+{ "﩯",  magicgrid },    /* 网格 */
 };
 
 #define SHCMD(cmd) { .v = (const char*[]){ "sh", "-c", cmd, NULL } }
@@ -102,12 +99,11 @@ static Key keys[] = {
     { MODKEY|ControlMask,  XK_F12,          quit,             {0} },                     /* super ctrl f12     |  退出dwm */
 
 	{ MODKEY|ShiftMask,    XK_space,        selectlayout,     {.v = &layouts[1]} },      /* super shift space  |  切换到网格布局 */
-	{ MODKEY,              XK_o,            showonlyorall,    {0} },                     /* super o            |  切换 只显示一个窗口 / 全部显示 */
+	{ MODKEY,              XK_o,            showonlyorall,    {0} },                     /* super o            |  切换 只显示一个窗口 / 全部显示  */
 
     { MODKEY|ControlMask,  XK_equal,        setgap,           {.i = -6} },               /* super ctrl up      |  窗口增大 */
     { MODKEY|ControlMask,  XK_minus,        setgap,           {.i = +6} },               /* super ctrl down    |  窗口减小 */
     { MODKEY|ControlMask,  XK_space,        setgap,           {.i = 0} },                /* super ctrl space   |  窗口重置 */
-
     { MODKEY|ControlMask,  XK_Up,           movewin,          {.ui = UP} },              /* super ctrl up      |  移动窗口 */
     { MODKEY|ControlMask,  XK_Down,         movewin,          {.ui = DOWN} },            /* super ctrl down    |  移动窗口 */
     { MODKEY|ControlMask,  XK_Left,         movewin,          {.ui = LEFT} },            /* super ctrl left    |  移动窗口 */
