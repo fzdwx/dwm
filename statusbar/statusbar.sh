@@ -23,7 +23,7 @@ refresh() {
     _icons='';  _cpu=''; _mem=''; _date=''; _vol=''; _bat='';   # 重置所有模块的状态为空
     source $DWM/statusbar/temp                                           # 从 temp 文件中读取模块的状态
     xsetroot -name "$_icons$_cpu$_mem$_date$_vol$_bat"             # 更新状态栏
-    xsetroot -name "$_icons$_coin$_cpu$_mem$_date$_vol$_bat"             # 更新状态栏
+#    xsetroot -name "$_icons$_coin$_cpu$_mem$_date$_vol$_bat"             # 更新状态栏
 }
 
 # 启动定时更新状态栏 不用的package有不同的刷新周期 注意不要重复启动该func
@@ -39,7 +39,7 @@ case $1 in
     cron) cron ;;
     refresh) refresh ;;
     update) shift 1; update $*; refresh ;;
-    updateall) update icons coin cpu mem date vol bat; refresh ;;
+    updateall) update icons cpu mem date vol bat; refresh ;;
     # 接收clickstatusbar传递过来的信号 $1: 模块名  $2: 按键(L|M|R)
     *) click $1 $2 ;;
 esac

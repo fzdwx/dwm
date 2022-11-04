@@ -19,6 +19,14 @@ export DWM=~/workspace/dwm
 将以下行添加到 .xinitrc 中来通过 `startx` 启动 dwm:  
 
 ```plaintext
+xrandr --output eDP-1-1 --auto --right-of HDMI-0
+feh --randomize --bg-fill ~/Pictures/qwe.jpg
+#picom --config ~/dwm/picom.conf &
+picom &
+/opt/clash/cfw &
+exec fcitx5 &
+dunst -conf /home/like/IdeaProjects/dwm/conf/dunst.conf
+#/home/like/IdeaProjects/dwm/statusbar/statusbar.sh cron &
 exec dwm
 ```
 
