@@ -15,10 +15,10 @@ static const int showbar                 = 1;         /* 是否显示状态栏 *
 static const int topbar                  = 1;         /* 指定状态栏位置 0底部 1顶部 */
 static const float mfact                 = 0.6;       /* 主工作区 大小比例 */
 static const int   nmaster               = 1;         /* 主工作区 窗口数量 */
-static const unsigned int snap           = 32;        /* 边缘依附宽度 */
+static const unsigned int snap           = 10;        /* 边缘依附宽度 */
 static const unsigned int baralpha       = 0xc0;      /* 状态栏透明度 */
 static const unsigned int borderalpha    = 0xdd;      /* 边框透明度 */
-static const char *fonts[]               = { "JetBrainsMono Nerd Font:style=medium:size=14", "monospace:size=14" };
+static const char *fonts[]               = { "JetBrainsMono Nerd Font:style=medium:size=13", "monospace:size=13" };
 static const char *colors[][3]           = { [SchemeNorm] = { "#bbbbbb", "#333333", "#444444" }, [SchemeSel] = { "#ffffff", "#37474F", "#42A5F5" }, [SchemeHid] = { "#dddddd", NULL, NULL }, [SchemeSystray] = { "#7799AA", "#7799AA", "#7799AA" }, [SchemeUnderline] = { "#7799AA", "#7799AA", "#7799AA" } };
 static const unsigned int alphas[][3]    = { [SchemeNorm] = { OPAQUE, baralpha, borderalpha }, [SchemeSel] = { OPAQUE, baralpha, borderalpha } };
 
@@ -31,8 +31,6 @@ static const Rule rules[] = {
     /* class                 instance              title             tags mask     isfloating   noborder  monitor */
     {"netease-cloud-music",  NULL,                 NULL,             1 << 10,      1,           0,        -1 },
     {"music",                NULL,                 NULL,             1 << 10,      1,           1,        -1 },
-    {"lx-music-desktop",     NULL,                 NULL,             1 << 10,      1,           1,        -1 },
-    { NULL,                 "tim.exe",             NULL,             1 << 11,      0,           0,        -1 },
     { NULL,                 "icalingua",           NULL,             1 << 11,      0,           1,        -1 },
     { NULL,                 "wechat.exe",          NULL,             1 << 12,      0,           0,        -1 },
     { NULL,                 "wxwork.exe",          NULL,             1 << 13,      0,           0,        -1 },
@@ -49,14 +47,13 @@ static const Rule rules[] = {
 static const char *overviewtag = "OVERVIEW";
 static const Layout overviewlayout = { "",  overview };
 
-static const char *termcmd[]  = { "wezterm", NULL };
 /* 自定义布局 */
 static const Layout layouts[] = {
 { "﬿",  tile },         /* 主次栈 */
 { "﩯",  magicgrid },    /* 网格 */
 };
 
-#define SHCMD(cmd) { .v = (const char*[]){ "sh", "-c", cmd, NULL } }
+#define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 #define MODKEY Mod4Mask
 #define TAGKEYS(KEY, TAG, cmd1, cmd2) \
     { MODKEY,              KEY, view,       {.ui = 1 << TAG, .v = cmd1} }, \
@@ -67,7 +64,7 @@ static Key keys[] = {
     /* modifier            key              function          argument */
     { MODKEY,              XK_equal,        togglesystray,    {0} },                     /* super +            |  切换 托盘栏显示状态 */
 
-    { Mod1Mask,              XK_Tab,          focusstack,       {.i = +1} },               /* super tab          |  本tag内切换聚焦窗口 */
+    { Mod1Mask,            XK_Tab,          focusstack,       {.i = +1} },               /* super tab          |  本tag内切换聚焦窗口 */
     { MODKEY,              XK_Up,           focusstack,       {.i = -1} },               /* super up           |  本tag内切换聚焦窗口 */
     { MODKEY,              XK_Down,         focusstack,       {.i = +1} },               /* super down         |  本tag内切换聚焦窗口 */
 
@@ -84,7 +81,7 @@ static Key keys[] = {
     { MODKEY,              XK_h,            hidewin,          {0} },                     /* super h            |  隐藏 窗口 */
     { MODKEY|ShiftMask,    XK_h,            restorewin,       {0} },                     /* super shift h      |  取消隐藏 窗口 */
 
-    { MODKEY,    XK_Return,       zoom,             {0} },                     /* super shift enter  |  将当前聚焦窗口置为主窗口 */
+    { MODKEY,    XK_Return,       zoom,             {0} },                               /* super shift enter  |  将当前聚焦窗口置为主窗口 */
 
     { MODKEY,              XK_t,            togglefloating,   {0} },                     /* super t            |  开启/关闭 聚焦目标的float模式 */
     { MODKEY|ShiftMask,    XK_t,            toggleallfloating,{0} },                     /* super shift t      |  开启/关闭 全部目标的float模式 */
@@ -92,8 +89,8 @@ static Key keys[] = {
     { MODKEY|ShiftMask,    XK_f,            togglebar,        {0} },                     /* super shift f      |  开启/关闭 状态栏 */
     { MODKEY,              XK_e,            incnmaster,       {.i = +1} },               /* super e            |  改变主工作区窗口数量 (1 2中切换) */
 
-    { MODKEY,              XK_x,            focusmon,         {.i = +1} },               /* super b            |  光标移动到另一个显示器 */
-    { MODKEY|ShiftMask,    XK_x,            tagmon,           {.i = +1} },               /* super shift b      |  将聚焦窗口移动到另一个显示器 */
+    { MODKEY,              XK_x,            focusmon,         {.i = +1} },               /* super x            |  光标移动到另一个显示器 */
+    { MODKEY|ShiftMask,    XK_x,            tagmon,           {.i = +1} },               /* super shift x      |  将聚焦窗口移动到另一个显示器 */
 
     { MODKEY,              XK_q,            killclient,       {0} },                     /* super q            |  关闭窗口 */
     { MODKEY|ControlMask,  XK_F12,          quit,             {0} },                     /* super ctrl f12     |  退出dwm */
@@ -114,9 +111,14 @@ static Key keys[] = {
     { MODKEY|Mod1Mask,     XK_Left,         resizewin,        {.ui = H_REDUCE} },        /* super alt left    |  调整窗口 */
     { MODKEY|Mod1Mask,     XK_Right,        resizewin,        {.ui = H_EXPAND} },        /* super alt right   |  调整窗口 */
 
-	{ MODKEY|ShiftMask,             XK_Return, spawn,          {.v = termcmd } },
-    /* spawn + SHCMD 执行对应命令 */
-    { Mod1Mask,            XK_space,        spawn,            SHCMD("rofi -show") },     /* alt space | rofi */
+    /* spawn + SHCMD 执行对应命令(已下部分建议完全自己重新定义) */
+    { MODKEY|ShiftMask,    XK_Return, spawn, SHCMD("wezterm") },                                                /* super enter      | 打开st终端            */
+    { MODKEY,              XK_minus,  spawn, SHCMD("wezterm start --class float") },                            /* super -          | 打开浮动st终端         */
+    { Mod1Mask,            XK_space,  spawn, SHCMD("rofi -show window  -icon-theme Papirus -show-icons") },                          /* super space      | rofi: 窗口选择         */
+    { MODKEY,              XK_F1,     spawn, SHCMD("pcmanfm") },                                                /* super F1         | 文件管理器             */
+    { MODKEY|ShiftMask,    XK_a,      spawn, SHCMD("flameshot gui -c -p ~/Pictures/screenshots") },             /* super shift a    | 截图                   */
+    { MODKEY|ShiftMask,    XK_q,      spawn, SHCMD("kill -9 $(xprop | grep _NET_WM_PID | awk '{print $3}')") }, /* super shift q    | 选中某个窗口并强制kill */
+    { ShiftMask|ControlMask, XK_c,    spawn, SHCMD("xclip -o | xclip -selection c") },                          /* super shift c    | 进阶复制               */
 
     /* super key : 跳转到对应tag */
     /* super shift key : 将聚焦窗口移动到对应tag */
@@ -131,15 +133,13 @@ static Key keys[] = {
     TAGKEYS(XK_7, 6,  0,  0)
     TAGKEYS(XK_8, 7,  0,  0)
     TAGKEYS(XK_9, 8,  0,  0)
-    TAGKEYS(XK_c, 9,  "~/dwm/scripts/app-starter.sh chrome",  "~/dwm/scripts/app-starter.sh chrome")
-    TAGKEYS(XK_m, 10, "~/dwm/scripts/app-starter.sh music",   "~/dwm/scripts/app-starter.sh pavucontrol")
-    TAGKEYS(XK_0, 11, "~/dwm/scripts/app-starter.sh tim",     "~/dwm/scripts/app-starter.sh tim")
-    TAGKEYS(XK_w, 12, "~/dwm/scripts/app-starter.sh wechat",  "~/dwm/scripts/app-starter.sh wechat")
-    TAGKEYS(XK_l, 13, "~/dwm/scripts/app-starter.sh wxwork",  "~/dwm/scripts/app-starter.sh wxwork")
+    TAGKEYS(XK_c, 9,  "google-chrome-stable", "google-chrome-stable")
+    TAGKEYS(XK_0, 11, "icalingua", "icalingua")
+    TAGKEYS(XK_w, 12, "/opt/apps/com.qq.weixin.deepin/files/run.sh", "/opt/apps/com.qq.weixin.deepin/files/run.sh")
 };
 static Button buttons[] = {
     /* click               event mask       button            function       argument  */
-	{ ClkStatusText,       0,               Button1,          spawn,         SHCMD("wezterm") }, // 左键        |  点击状态栏   |  打开float st
+	{ ClkStatusText,       0,               Button1,          spawn,         SHCMD("wezterm") },                      // 左键        |  点击状态栏   |  打开float st
     { ClkWinTitle,         0,               Button1,          hideotherwins, {0} },                                   // 左键        |  点击标题     |  隐藏其他窗口仅保留该窗口
     { ClkWinTitle,         0,               Button3,          togglewin,     {0} },                                   // 右键        |  点击标题     |  切换窗口显示状态
     { ClkTagBar,           0,               Button1,          view,          {0} },                                   // 左键        |  点击tag      |  切换tag
