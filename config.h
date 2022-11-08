@@ -22,6 +22,9 @@ static const char *fonts[]               = { "JetBrainsMono Nerd Font:style=medi
 static const char *colors[][3]           = { [SchemeNorm] = { "#bbbbbb", "#333333", "#444444" }, [SchemeSel] = { "#ffffff", "#37474F", "#42A5F5" }, [SchemeHid] = { "#dddddd", NULL, NULL }, [SchemeSystray] = { "#7799AA", "#7799AA", "#7799AA" }, [SchemeUnderline] = { "#7799AA", "#7799AA", "#7799AA" } };
 static const unsigned int alphas[][3]    = { [SchemeNorm] = { OPAQUE, baralpha, borderalpha }, [SchemeSel] = { OPAQUE, baralpha, borderalpha } };
 
+/* 自定义脚本位置 */
+static const char *autostartscript = "~/scripts/autostart.sh";
+static const char *statusbarscript = "$DWM/statusbar/statusbar.sh";
 
 /* 自定义tag名称 */
 /* 自定义特定实例的显示状态 */
@@ -112,11 +115,11 @@ static Key keys[] = {
     { MODKEY|Mod1Mask,     XK_Right,        resizewin,        {.ui = H_EXPAND} },        /* super alt right   |  调整窗口 */
 
     /* spawn + SHCMD 执行对应命令(已下部分建议完全自己重新定义) */
-    { MODKEY|ShiftMask,    XK_Return, spawn, SHCMD("wezterm") },                                                /* super enter      | 打开st终端            */
+    { MODKEY|ShiftMask,    XK_Return, spawn, SHCMD("wezterm") },                                                /* super enter      | 打开st终端            */  
     { MODKEY,              XK_minus,  spawn, SHCMD("wezterm start --class float") },                            /* super -          | 打开浮动st终端         */
-    { Mod1Mask,            XK_space,  spawn, SHCMD("rofi -show window  -icon-theme Papirus -show-icons") },                          /* super space      | rofi: 窗口选择         */
+    { Mod1Mask,            XK_space,  spawn, SHCMD("rofi -show window  -icon-theme Papirus -show-icons") },     /* super space      | rofi: 窗口选择         */
     { MODKEY,              XK_F1,     spawn, SHCMD("pcmanfm") },                                                /* super F1         | 文件管理器             */
-    { MODKEY|ShiftMask,    XK_a,      spawn, SHCMD("flameshot gui -c -p ~/Pictures/screenshots") },             /* super shift a    | 截图                   */
+    { MODKEY|ShiftMask,    XK_a,      spawn, SHCMD("flameshot gui") },                                          /* super shift a    | 截图                   */
     { MODKEY|ShiftMask,    XK_q,      spawn, SHCMD("kill -9 $(xprop | grep _NET_WM_PID | awk '{print $3}')") }, /* super shift q    | 选中某个窗口并强制kill */
     { ShiftMask|ControlMask, XK_c,    spawn, SHCMD("xclip -o | xclip -selection c") },                          /* super shift c    | 进阶复制               */
 
@@ -137,10 +140,13 @@ static Key keys[] = {
     TAGKEYS(XK_0, 11, "icalingua", "icalingua")
     TAGKEYS(XK_w, 12, "/opt/apps/com.qq.weixin.deepin/files/run.sh", "/opt/apps/com.qq.weixin.deepin/files/run.sh")
 };
+
 static Button buttons[] = {
     /* click               event mask       button            function       argument  */
-	{ ClkStatusText,       0,               Button1,          spawn,         SHCMD("wezterm") },                      // 左键        |  点击状态栏   |  打开float st
     { ClkWinTitle,         0,               Button1,          hideotherwins, {0} },                                   // 左键        |  点击标题     |  隐藏其他窗口仅保留该窗口
+    { ClkStatusText,       0,               Button1,          clickstatusbar,{0} },                                   // 左键        |  点击状态栏   |  根据状态栏的信号执行 ~/scripts/dwmstatusbar.sh $signal L
+    { ClkStatusText,       0,               Button2,          clickstatusbar,{0} },                                   // 中键        |  点击状态栏   |  根据状态栏的信号执行 ~/scripts/dwmstatusbar.sh $signal M
+    { ClkStatusText,       0,               Button3,          clickstatusbar,{0} },                                   // 右键        |  点击状态栏   |  根据状态栏的信号执行 ~/scripts/dwmstatusbar.sh $signal R
     { ClkWinTitle,         0,               Button3,          togglewin,     {0} },                                   // 右键        |  点击标题     |  切换窗口显示状态
     { ClkTagBar,           0,               Button1,          view,          {0} },                                   // 左键        |  点击tag      |  切换tag
 	{ ClkTagBar,           0,               Button3,          toggleview,    {0} },                                   // 右键        |  点击tag      |  切换是否显示tag
