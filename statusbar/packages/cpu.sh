@@ -21,8 +21,8 @@ update() {
 click() {
     case "$1" in
         L) ;;
-        M) wezterm start --class float btop;;
-        R) wezterm start --class float btop;;
+        M) wezterm start --class noborder btop;;
+        R) wezterm start --class noborder btop;;
     esac
 }
 

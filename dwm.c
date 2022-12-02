@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/time.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
@@ -49,7 +50,7 @@
 #define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define INTERSECT(x,y,w,h,m)    (MAX(0, MIN((x)+(w),(m)->wx+(m)->ww) - MAX((x),(m)->wx)) \
                                * MAX(0, MIN((y)+(h),(m)->wy+(m)->wh) - MAX((y),(m)->wy)))
-#define ISVISIBLE(C)            ((C->mon->isoverview || C->tags & C->mon->tagset[C->mon->seltags]))
+#define ISVISIBLE(C)            ((C->mon->isoverview || C->isglobal || C->tags & C->mon->tagset[C->mon->seltags]))
 #define HIDDEN(C)               ((getstate(C->win) == IconicState))
 #define LENGTH(X)               (sizeof X / sizeof X[0])
 #define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
@@ -77,7 +78,7 @@
 
 /* enums */
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
-enum { SchemeNorm, SchemeSel, SchemeHid, SchemeSystray, SchemeUnderline }; /* color schemes */
+enum { SchemeNorm, SchemeSel, SchemeSelGlobal, SchemeHid, SchemeSystray, SchemeUnderline }; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
@@ -115,7 +116,7 @@ struct Client {
 	int bw, oldbw;
     int taskw;
 	unsigned int tags;
-	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen;
+	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isglobal, isnoborder;
 	Client *next;
 	Client *snext;
 	Monitor *mon;
@@ -165,7 +166,8 @@ typedef struct {
 	const char *title;
 	unsigned int tags;
 	int isfloating;
-	int noborder;
+    int isglobal;
+	int isnoborder;
 	int monitor;
 } Rule;
 
@@ -176,7 +178,7 @@ struct Systray {
 };
 
 /* function declarations */
-static void logtofile(const char *format, ...);
+static void logtofile(char log[100]);
 
 static void tile(Monitor *m);
 static void magicgrid(Monitor *m);
@@ -235,11 +237,13 @@ static void hideotherwins(const Arg *arg);
 static void showonlyorall(const Arg *arg);
 static int issinglewin(const Arg *arg);
 static void togglewin(const Arg *arg);
+static void toggleglobal(const Arg *arg);
 static void restorewin(const Arg *arg);
 
 static void incnmaster(const Arg *arg);
 static void keypress(XEvent *e);
 static void killclient(const Arg *arg);
+static void forcekillclient(const Arg *arg);
 
 static void manage(Window w, XWindowAttributes *wa);
 static void mappingnotify(XEvent *e);
@@ -384,17 +388,9 @@ struct Pertag {
 
 /* function implementations */
 void
-logtofile(const char *format, ...)
+logtofile(char log[100])
 {
-    va_list args;
-    const char *args1;
-    va_start(args, format);
-    args1 = va_arg(args,const char *);
-    va_end(args);
-
-    char log [100];
     char cmd [150];
-    sprintf(log, format, args1);
     sprintf(cmd, "echo '%s' >> ~/log", log);
     system(cmd);
 }
@@ -410,6 +406,8 @@ applyrules(Client *c)
 
     /* rule matching */
     c->isfloating = 0;
+    c->isglobal = 0;
+    c->isnoborder = 0;
     c->tags = 0;
     XGetClassHint(dpy, c->win, &ch);
     class    = ch.res_class ? ch.res_class : broken;
@@ -422,8 +420,10 @@ applyrules(Client *c)
                 && (!r->instance || strstr(instance, r->instance)))
         {
             c->isfloating = r->isfloating;
+            c->isglobal = r->isglobal;
+            c->isnoborder = r->isnoborder;
             c->tags |= r->tags;
-            if (r->noborder)
+            if (r->isnoborder)
                 c->bw = 0;
             for (m = mons; m && m->num != r->monitor; m = m->next);
             if (m)
@@ -559,6 +559,7 @@ buttonpress(XEvent *e)
     Monitor *m;
     XButtonPressedEvent *ev = &e->xbutton;
 
+    // 判断鼠标点击的位置
     click = ClkRootWin;
     /* focus monitor if necessary */
     if ((m = wintomon(ev->window)) && m != selmon) {
@@ -567,8 +568,10 @@ buttonpress(XEvent *e)
         focus(NULL);
     }
     int status_w = drawstatusbar(selmon, bh, stext);
-    if (ev->window == selmon->barwin) {
+    if (ev->window == selmon->barwin) { // 点击在bar上
         i = x = 0;
+        blw = TEXTW(selmon->ltsymbol);
+
         if (selmon->isoverview) {
             x += TEXTW(overviewtag);
             i = ~0;
@@ -576,7 +579,7 @@ buttonpress(XEvent *e)
                 i = LENGTH(tags);
         } else {
             for (c = m->clients; c; c = c->next)
-                occ |= c->tags == 255 ? 0 : c->tags;
+                occ |= c->tags == TAGMASK ? 0 : c->tags;
             do {
                 /* do not reserve space for vacant tags */
                 if (!(occ & 1 << i || m->tagset[m->seltags] & 1 << i))
@@ -592,7 +595,7 @@ buttonpress(XEvent *e)
         else if (ev->x > selmon->ww - status_w -  (selmon == systraytomon(selmon) ? getsystraywidth() : 0)) {
             click = ClkStatusText;
             arg.i = ev->x - (selmon->ww - status_w - (selmon == systraytomon(selmon) ? getsystraywidth() : 0));
-            arg.ui = ev->button; // 1 => L，2 => M，3 => R
+            arg.ui = ev->button; // 1 => L，2 => M，3 => R, 5 => U, 6 => D
         } else {
             x += blw;
             c = m->clients;
@@ -964,7 +967,7 @@ drawbar(Monitor *m)
     for (c = m->clients; c; c = c->next) {
         if (ISVISIBLE(c))
             n++;
-        occ |= c->tags == 255 ? 0 : c->tags;
+        occ |= c->tags == TAGMASK ? 0 : c->tags;
         if (c->isurgent)
             urg |= c->tags;
     }
@@ -998,6 +1001,7 @@ drawbar(Monitor *m)
     }
 
     // 绘制模式图标
+    w = TEXTW(overviewlayout.symbol);
     drw_setscheme(drw, scheme[SchemeNorm]);
     x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
 
@@ -1153,12 +1157,21 @@ drawstatusbar(Monitor *m, int bh, char* stext) {
 
 // 点击状态栏时执行的func
 // 传入参数为 i  => 鼠标点击的位置相对于左边界的距离
-// 传入参数为 ui => 鼠标按键 1 => 左键 2 => 中键 3 => 右键
+// 传入参数为 ui => 鼠标按键, 1 => 左键, 2 => 中键, 3 => 右键, 4 => 滚轮向上, 5 => 滚轮向下
+long lastclickstatusbartime = 0; // 用于避免过于频繁的点击和滚轮行为
 void
 clickstatusbar(const Arg *arg)
 {
     if (!arg->i && arg->i < 0)
         return;
+
+    // 用于避免过于频繁的点击和滚轮行为
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    long now = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    if (now - lastclickstatusbartime < 100)
+        return;
+    lastclickstatusbartime = now;
 
     int offset = -1;
     int status_w = 0;
@@ -1213,6 +1226,8 @@ clickstatusbar(const Arg *arg)
         case Button1: button = "L"; break;
         case Button2: button = "M"; break;
         case Button3: button = "R"; break;
+        case Button4: button = "U"; break;
+        case Button5: button = "D"; break;
     }
 
     memset(text, '\0', sizeof(text));
@@ -1267,7 +1282,7 @@ focus(Client *c)
         detachstack(c);
         attachstack(c);
         grabbuttons(c, 1);
-        XSetWindowBorder(dpy, c->win, scheme[SchemeSel][ColBorder].pixel);
+        XSetWindowBorder(dpy, c->win, scheme[c->isglobal ? SchemeSelGlobal : SchemeSel][ColBorder].pixel);
         setfocus(c);
     } else {
         XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
@@ -1592,7 +1607,17 @@ killclient(const Arg *arg)
 }
 
 void
-randomxy(Client *c)
+forcekillclient(const Arg *arg)
+{
+    if (!selmon->sel)
+        return;
+    killclient(arg);
+    unmanage(selmon->sel, 1);
+}
+
+
+void
+managefloating(Client *c)
 {
     Client *tc;
     int d1 = 0, d2 = 0, tx, ty;
@@ -1659,7 +1684,7 @@ manage(Window w, XWindowAttributes *wa)
             c->x = selmon->wx + (selmon->ww - c->w) / 2;
             c->y = selmon->wy + (selmon->wh - c->h) / 2;
         }
-        randomxy(c);
+        managefloating(c);
     }
 
     XConfigureWindow(dpy, w, CWBorderWidth, &wc);
@@ -1805,8 +1830,9 @@ movemouse(const Arg *arg)
 void
 movewin(const Arg *arg)
 {
-    Client *c;
+    Client *c, *tc;
     int nx, ny;
+    int buttom, top, left, right, tar;
     c = selmon->sel;
     if (!c || c->isfullscreen)
         return;
@@ -1816,31 +1842,81 @@ movewin(const Arg *arg)
     ny = c->y;
     switch (arg->ui) {
         case UP:
+            tar = -99999;
+            top = c->y;
             ny -= c->mon->wh / 4;
+            for (tc = c->mon->clients; tc; tc = tc->next) {
+                // 若浮动tc c的顶边会穿过tc的底边
+                if (!ISVISIBLE(tc) || !tc->isfloating || tc == c) continue;
+                if (c->x + WIDTH(c) < tc->x || c->x > tc->x + WIDTH(tc)) continue;
+                buttom = tc->y + HEIGHT(tc) + gappi;
+                if (top > buttom && ny < buttom) {
+                    tar = MAX(tar, buttom);
+                };
+            }
+            ny = tar == -99999 ? ny : tar;
             ny = MAX(ny, c->mon->wy + gappo);
             break;
         case DOWN:
+            tar = 99999;
+            buttom = c->y + HEIGHT(c);
             ny += c->mon->wh / 4;
+            for (tc = c->mon->clients; tc; tc = tc->next) {
+                // 若浮动tc c的底边会穿过tc的顶边
+                if (!ISVISIBLE(tc) || !tc->isfloating || tc == c) continue;
+                if (c->x + WIDTH(c) < tc->x || c->x > tc->x + WIDTH(tc)) continue;
+                top = tc->y - gappi;
+                if (buttom < top && (ny + HEIGHT(c)) > top) {
+                    tar = MIN(tar, top - HEIGHT(c));
+                };
+            }
+            ny = tar == 99999 ? ny : tar;
             ny = MIN(ny, c->mon->wy + c->mon->wh - gappo - HEIGHT(c));
             break;
         case LEFT:
-            nx -= c->mon->ww / 4;
+            tar = -99999;
+            left = c->x;
+            nx -= c->mon->ww / 6;
+            for (tc = c->mon->clients; tc; tc = tc->next) {
+                // 若浮动tc c的左边会穿过tc的右边
+                if (!ISVISIBLE(tc) || !tc->isfloating || tc == c) continue;
+                if (c->y + HEIGHT(c) < tc->y || c->y > tc->y + HEIGHT(tc)) continue;
+                right = tc->x + WIDTH(tc) + gappi;
+                if (left > right && nx < right) {
+                    tar = MAX(tar, right);
+                };
+            }
+            nx = tar == -99999 ? nx : tar;
             nx = MAX(nx, c->mon->wx + gappo);
             break;
         case RIGHT:
-            nx += c->mon->ww / 4;
+            tar = 99999;
+            right = c->x + WIDTH(c);
+            nx += c->mon->ww / 6;
+            for (tc = c->mon->clients; tc; tc = tc->next) {
+                // 若浮动tc c的右边会穿过tc的左边
+                if (!ISVISIBLE(tc) || !tc->isfloating || tc == c) continue;
+                if (c->y + HEIGHT(c) < tc->y || c->y > tc->y + HEIGHT(tc)) continue;
+                left = tc->x - gappi;
+                if (right < left && (nx + WIDTH(c)) > left) {
+                    tar = MIN(tar, left - WIDTH(c));
+                };
+            }
+            nx = tar == 99999 ? nx : tar;
             nx = MIN(nx, c->mon->wx + c->mon->ww - gappo - WIDTH(c));
             break;
     }
     resize(c, nx, ny, c->w, c->h, 1);
     pointerfocuswin(c);
+    restack(selmon);
 }
 
 void
 resizewin(const Arg *arg)
 {
-    Client *c;
+    Client *c, *tc;
     int nh, nw;
+    int buttom, top, left, right, tar;
     c = selmon->sel;
     if (!c || c->isfullscreen)
         return;
@@ -1849,28 +1925,52 @@ resizewin(const Arg *arg)
     nw = c->w;
     nh = c->h;
     switch (arg->ui) {
-        case H_EXPAND:
-            nw += selmon->wh / 10;
+        case H_EXPAND: // 右
+            tar = 99999;
+            right = c->x + WIDTH(c);
+            nw += selmon->ww / 16;
+            for (tc = c->mon->clients; tc; tc = tc->next) {
+                // 若浮动tc c的右边会穿过tc的左边
+                if (!ISVISIBLE(tc) || !tc->isfloating || tc == c) continue;
+                if (c->y + HEIGHT(c) < tc->y || c->y > tc->y + HEIGHT(tc)) continue;
+                left = tc->x - gappi;
+                if (right < left && (c->x + nw) > left) {
+                    tar = MIN(tar, left - c->x - 2 * c->bw);
+                };
+            }
+            nw = tar == 99999 ? nw : tar;
+            if (c->x + nw + gappo + 2 * c->bw > selmon->wx + selmon->ww)
+                nw = selmon->wx + selmon->ww - c->x - gappo - 2 * c->bw;
             break;
-        case H_REDUCE:
-            nw -= selmon->wh / 10;
+        case H_REDUCE: // 左
+            nw -= selmon->ww / 16;
+            nw = MAX(nw, selmon->ww / 10);
             break;
-        case V_EXPAND:
-            nh += selmon->ww / 10;
+        case V_EXPAND: // 下
+            tar = -99999;
+            buttom = c->y + HEIGHT(c);
+            nh += selmon->wh / 8;
+            for (tc = c->mon->clients; tc; tc = tc->next) {
+                // 若浮动tc c的底边会穿过tc的顶边
+                if (!ISVISIBLE(tc) || !tc->isfloating || tc == c) continue;
+                if (c->x + WIDTH(c) < tc->x || c->x > tc->x + WIDTH(tc)) continue;
+                top = tc->y - gappi;
+                if (buttom < top && (c->y + nh) > top) {
+                    tar = MAX(tar, top - c->y - 2 * c->bw);
+                };
+            }
+            nh = tar == -99999 ? nh : tar;
+            if (c->y + nh + gappo + 2 * c->bw > selmon->wy + selmon->wh)
+                nh = selmon->wy + selmon->wh - c->y - gappo - 2 * c->bw;
             break;
-        case V_REDUCE:
-            nh -= selmon->ww / 10;
+        case V_REDUCE: // 上
+            nh -= selmon->wh / 8;
+            nh = MAX(nh, selmon->wh / 10);
             break;
     }
-    nw = MAX(nw, selmon->ww / 10);
-    nh = MAX(nh, selmon->wh / 10);
-    if (c->x + nw + gappo + 2 * c->bw > selmon->wx + selmon->ww)
-        nw = selmon->wx + selmon->ww - c->x - gappo - 2 * c->bw;
-    if (c->y + nh + gappo + 2 * c->bw > selmon->wy + selmon->wh)
-        nh = selmon->wy + selmon->wh - c->y - gappo - 2 * c->bw;
     resize(c, c->x, c->y, nw, nh, 1);
-    focus(c);
     XWarpPointer(dpy, None, root, 0, 0, 0, 0, c->x + c->w - 2 * c->bw, c->y + c->h - 2 * c->bw);
+    restack(selmon);
 }
 
 Client *
@@ -1888,6 +1988,7 @@ pop(Client *c)
     c->mon->clients = c;
 	focus(c);
 	arrange(c->mon);
+    pointerfocuswin(c);
 }
 
 void
@@ -2013,9 +2114,14 @@ void
 resizemouse(const Arg *arg)
 {
     int ocx, ocy, nw, nh;
+    int ocx2, ocy2, nx, ny;
     Client *c;
     Monitor *m;
     XEvent ev;
+    int horizcorner, vertcorner;
+	int di;
+	unsigned int dui;
+	Window dummy;
     Time lasttime = 0;
 
     if (!(c = selmon->sel))
@@ -2025,10 +2131,18 @@ resizemouse(const Arg *arg)
     restack(selmon);
     ocx = c->x;
     ocy = c->y;
+	ocx2 = c->x + c->w;
+	ocy2 = c->y + c->h;
     if (XGrabPointer(dpy, root, False, MOUSEMASK, GrabModeAsync, GrabModeAsync,
                 None, cursor[CurResize]->cursor, CurrentTime) != GrabSuccess)
         return;
-    XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w + c->bw - 1, c->h + c->bw - 1);
+    if (!XQueryPointer(dpy, c->win, &dummy, &dummy, &di, &di, &nx, &ny, &dui))
+        return;
+    horizcorner = nx < c->w / 2;
+    vertcorner = ny < c->h / 2;
+	XWarpPointer (dpy, None, c->win, 0, 0, 0, 0,
+			horizcorner ? (-c->bw) : (c->w + c->bw -1),
+			vertcorner  ? (-c->bw) : (c->h + c->bw -1));
     do {
         XMaskEvent(dpy, MOUSEMASK|ExposureMask|SubstructureRedirectMask, &ev);
         switch(ev.type) {
@@ -2042,8 +2156,10 @@ resizemouse(const Arg *arg)
                     continue;
                 lasttime = ev.xmotion.time;
 
-                nw = MAX(ev.xmotion.x - ocx - 2 * c->bw + 1, 1);
-                nh = MAX(ev.xmotion.y - ocy - 2 * c->bw + 1, 1);
+	    		nx = horizcorner ? ev.xmotion.x : c->x;
+	    		ny = vertcorner ? ev.xmotion.y : c->y;
+	    		nw = MAX(horizcorner ? (ocx2 - nx) : (ev.xmotion.x - ocx - 2 * c->bw + 1), 1);
+	    		nh = MAX(vertcorner ? (ocy2 - ny) : (ev.xmotion.y - ocy - 2 * c->bw + 1), 1);
                 if (c->mon->wx + nw >= selmon->wx && c->mon->wx + nw <= selmon->wx + selmon->ww
                         && c->mon->wy + nh >= selmon->wy && c->mon->wy + nh <= selmon->wy + selmon->wh) {
                     if (!c->isfloating && (abs(nw - c->w) > snap || abs(nh - c->h) > snap)) {
@@ -2052,11 +2168,13 @@ resizemouse(const Arg *arg)
                     }
                 }
                 if (c->isfloating)
-                    resize(c, c->x, c->y, nw, nh, 1);
+                    resize(c, nx, ny, nw, nh, 1);
                 break;
         }
     } while (ev.type != ButtonRelease);
-    XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w + c->bw - 1, c->h + c->bw - 1);
+	XWarpPointer(dpy, None, c->win, 0, 0, 0, 0,
+		      horizcorner ? (-c->bw) : (c->w + c->bw - 1),
+		      vertcorner ? (-c->bw) : (c->h + c->bw - 1));
     XUngrabPointer(dpy, CurrentTime);
     while (XCheckMaskEvent(dpy, EnterWindowMask, &ev));
     if ((m = recttomon(c->x, c->y, c->w, c->h)) != selmon) {
@@ -2464,7 +2582,7 @@ spawn(const Arg *arg)
 void
 tag(const Arg *arg)
 {
-    if (selmon->sel && arg->ui & TAGMASK) {
+    if (selmon->sel && !selmon->sel->isglobal && arg->ui & TAGMASK) {
         selmon->sel->tags = arg->ui & TAGMASK;
         focus(NULL);
         arrange(selmon);
@@ -2529,7 +2647,7 @@ togglefloating(const Arg *arg)
     if (selmon->sel->isfloating) {
         selmon->sel->x = selmon->wx + selmon->ww / 6,
         selmon->sel->y = selmon->wy + selmon->wh / 6,
-        randomxy(selmon->sel);
+        managefloating(selmon->sel);
         resize(selmon->sel, selmon->sel->x, selmon->sel->y, selmon->ww / 3 * 2, selmon->wh / 3 * 2, 0);
     }
 
@@ -2627,6 +2745,16 @@ toggleview(const Arg *arg)
 		focus(NULL);
 		arrange(selmon);
 	}
+}
+
+void
+toggleglobal(const Arg *arg)
+{
+    if (!selmon->sel)
+        return;
+    selmon->sel->isglobal ^= 1;
+    selmon->sel->tags = selmon->sel->isglobal ? TAGMASK : selmon->tagset[selmon->seltags];
+    focus(NULL);
 }
 
 void
@@ -3106,7 +3234,7 @@ toggleoverview(const Arg *arg)
     if (selmon->sel && selmon->sel->isfullscreen) /* no support for fullscreen windows */
         return;
 
-    uint target = selmon->sel ? selmon->sel->tags : selmon->seltags;
+    uint target = selmon->sel && selmon->sel->tags != TAGMASK ? selmon->sel->tags : selmon->seltags;
     selmon->isoverview ^= 1;
     view(&(Arg){ .ui = target });
     pointerfocuswin(selmon->sel);
@@ -3122,6 +3250,7 @@ viewtoleft(const Arg *arg) {
         if (target == pre) return;
 
         for (c = selmon->clients; c; c = c->next) {
+            if (c->isglobal && c->tags == TAGMASK) continue;
             if (c->tags & target && __builtin_popcount(selmon->tagset[selmon->seltags] & TAGMASK) == 1
                     && selmon->tagset[selmon->seltags] > 1) {
                 view(&(Arg) { .ui = target });
@@ -3140,6 +3269,7 @@ viewtoright(const Arg *arg) {
         if (!(target & TAGMASK)) return;
 
         for (c = selmon->clients; c; c = c->next) {
+            if (c->isglobal && c->tags == TAGMASK) continue;
             if (c->tags & target && __builtin_popcount(selmon->tagset[selmon->seltags] & TAGMASK) == 1
                     && selmon->tagset[selmon->seltags] & (TAGMASK >> 1)) {
                 view(&(Arg) { .ui = target });
@@ -3152,7 +3282,7 @@ viewtoright(const Arg *arg) {
 void
 tile(Monitor *m)
 {
-    unsigned int i, n, h, r, mw, my, ty;
+    unsigned int i, n, mw, mh, sh, my, sy; // mw: master的宽度, mh: master的高度, sh: stack的高度, my: master的y坐标, sy: stack的y坐标
     Client *c;
 
     for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
@@ -3162,27 +3292,27 @@ tile(Monitor *m)
         mw = m->nmaster ? (m->ww + gappi) * m->mfact : 0;
     else
         mw = m->ww - 2 * gappo + gappi;
-    for (i = 0, my = ty = gappo, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
+
+    mh = m->nmaster == 0 ? 0 : (m->wh - 2 * gappo - gappi * (m->nmaster - 1)) / m->nmaster;           // 单个master的高度
+    sh = n == m->nmaster ? 0 : (m->wh - 2 * gappo - gappi * (n - m->nmaster - 1)) / (n - m->nmaster); // 单个stack的高度
+
+    for (i = 0, my = sy = gappo, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
         if (i < m->nmaster) {
-            r = MIN(n, m->nmaster) - i;
-            h = (m->wh - my - gappo - gappi * (r - 1)) / r;
             resize(c,
                    m->wx + gappo,
                    m->wy + my,
                    mw - 2 * c->bw - gappi,
-                   h - 2 * c->bw,
+                   mh - 2 * c->bw,
                    0);
             my += HEIGHT(c) + gappi;
         } else {
-            r = n - i;
-            h = (m->wh - ty - gappo - gappi * (r - 1)) / r;
             resize(c,
                    m->wx + mw + gappo,
-                   m->wy + ty,
+                   m->wy + sy,
                    m->ww - mw - 2 * c->bw - 2 * gappo,
-                   h - 2* c->bw,
+                   sh - 2* c->bw,
                    0);
-            ty += HEIGHT(c) + gappi;
+            sy += HEIGHT(c) + gappi;
         }
 }
 
