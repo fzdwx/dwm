@@ -8,7 +8,11 @@ color="^c#553388^^b#334466^"
 signal=$(echo "^s$this^" | sed 's/_//')
 
 update() {
-  wifi_text=$(nmcli device wifi show-password | head -n 1 | awk '{print $2}')
+  #  wifi_text=$(nmcli device wifi show-password | head -n 1 | awk '{print $2}')
+  wifi_text=$(iwgetid -r)
+  if [ -z "$wifi_text" ]; then
+    return
+  fi
   wifi_icon="📡"
   text=" $wifi_icon $wifi_text "
   sed -i '/^export '$this'=.*$/d' $DWM/statusbar/temp
