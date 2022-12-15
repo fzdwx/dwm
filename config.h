@@ -145,7 +145,6 @@ static Key keys[] = {
     /* spawn + SHCMD 执行对应命令(已下部分建议完全自己重新定义) */
     { MODKEY|ShiftMask,        XK_Return, spawn, SHCMD("wezterm") },                                                    /* super enter      | 打开st终端                   */
     { MODKEY,                  XK_minus,  spawn, SHCMD("wezterm start --class float") },                                /* super -          | 打开浮动st终端               */
-    { MODKEY,                  XK_equal,  spawn, SHCMD("wezterm start --class global") },                               /* super +          | 打开全局st终端              */
     { Mod1Mask,                XK_space,  spawn, SHCMD("rofi -show window  -icon-theme Papirus -show-icons") },         /* alt space        | rofi: 窗口选择             */
     { MODKEY,                  XK_F1,     spawn, SHCMD("pcmanfm") },                                                    /* super F1         | 文件管理器                */
     { ControlMask|Mod1Mask,    XK_a,      spawn, SHCMD("flameshot gui") },                                              /* super shift a    | 截图                    */
