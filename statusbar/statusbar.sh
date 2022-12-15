@@ -22,9 +22,9 @@ click() {
 
 # 更新状态栏
 refresh() {
-    _bg=''; _fm=''; _wifi=''; _icons='';  _cpu=''; _mem=''; _date=''; _vol=''; _bat='';   # 重置所有模块的状态为空
-    source $DWM/statusbar/temp                                                            # 从 temp 文件中读取模块的状态
-    xsetroot -name "$_bg$_fm$_wifi$_icons$_cpu$_mem$_date$_vol$_bat"                      # 更新状态栏
+    _bg=''; _fm=''; _wifi='';  _cpu=''; _mem=''; _date=''; _vol=''; _bat='';   # 重置所有模块的状态为空
+    source $DWM/statusbar/temp                                                 # 从 temp 文件中读取模块的状态
+    xsetroot -name "$_bg$_fm$_wifi$_cpu$_mem$_date$_vol$_bat"                  # 更新状态栏
 }
 
 # 启动定时更新状态栏 不用的package有不同的刷新周期 注意不要重复启动该func

@@ -40,6 +40,8 @@ static const unsigned int alphas[][3]    = {          /* 透明度设置 ColFg, 
     [SchemeSelTag] = { OPAQUE, baralpha, borderalpha },
 };
 
+/* 自定义 scratchpad instance */
+static const char scratchpadname[] = "scratchpad";
 
 /* 自定义脚本位置 */
 static const char *autostartscript = "~/scripts/autostart.sh";
