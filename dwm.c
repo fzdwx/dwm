@@ -78,7 +78,16 @@
 
 /* enums */
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
-enum { SchemeNorm, SchemeSel, SchemeSelGlobal, SchemeHid, SchemeSystray, SchemeUnderline }; /* color schemes */
+enum {
+    SchemeNorm,       // 普通
+    SchemeSel,        // 选中的
+    SchemeSelGlobal,  // 全局并选中的
+    SchemeHid,        // 隐藏的
+    SchemeSystray,    // 托盘
+    SchemeNormTag,    // 普通标签
+    SchemeSelTag,     // 选中的标签
+    SchemeUnderline   // 下划线
+}; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
@@ -295,6 +304,7 @@ static void togglebar(const Arg *arg);
 static void togglesystray();
 static void togglefloating(const Arg *arg);
 static void toggleallfloating(const Arg *arg);
+static void togglescratch(const Arg *arg);
 
 static void unfocus(Client *c, int setfocus);
 static void unmanage(Client *c, int destroyed);
@@ -430,6 +440,8 @@ applyrules(Client *c)
                 c->mon = m;
         }
     }
+    if (!strcmp(c->name, scratchpadname)) // scratchpad is default global
+        c->isglobal = 1;
     if (ch.res_class)
         XFree(ch.res_class);
     if (ch.res_name)
@@ -978,7 +990,7 @@ drawbar(Monitor *m)
     // 代表为overview tag状态
     if (m->isoverview) {
         w = TEXTW(overviewtag);
-        drw_setscheme(drw, scheme[SchemeSel]);
+        drw_setscheme(drw, scheme[SchemeSelTag]);
         drw_text(drw, x, 0, w, bh, lrpad / 2, overviewtag, 0);
         drw_setscheme(drw, scheme[SchemeUnderline]);
         drw_rect(drw, x, bh - boxw, w + lrpad, boxw, 1, 0);
@@ -990,11 +1002,11 @@ drawbar(Monitor *m)
                 continue;
 
             w = TEXTW(tags[i]);
-            drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
+            drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSelTag : SchemeNormTag]);
             drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
             if (m->tagset[m->seltags] & 1 << i) {
                 drw_setscheme(drw, scheme[SchemeUnderline]);
-                drw_rect(drw, x, bh - boxw, w + lrpad, boxw, 1, 0);
+                drw_rect(drw, x + 2, bh - boxw, w + lrpad - 4, boxw, 1, 0);
             }
             x += w;
         }
@@ -2541,18 +2553,18 @@ showtag(Client *c)
     if (!c)
         return;
     if (ISVISIBLE(c)) {
-        /* show clients top down */
+        /** 将可见的client从屏幕边缘移动到屏幕内 */
         XMoveWindow(dpy, c->win, c->x, c->y);
         if (c->isfloating && !c->isfullscreen)
             resize(c, c->x, c->y, c->w, c->h, 0);
         showtag(c->snext);
     } else {
-        /* hide clients bottom up */
+        /* 将不可见的client移动到屏幕之外 */
         showtag(c->snext);
         if (c->mon->mx == 0) {
-            XMoveWindow(dpy, c->win, WIDTH(c) * -2, c->y);
+            XMoveWindow(dpy, c->win, WIDTH(c) * -1.5, c->y);
         } else {
-            XMoveWindow(dpy, c->win, c->mon->mx + c->mon->mw + WIDTH(c) * 2, c->y);
+            XMoveWindow(dpy, c->win, c->mon->mx + c->mon->mw + WIDTH(c) * 1.5, c->y);
         }
     }
 }
@@ -2598,6 +2610,9 @@ tagmon(const Arg *arg)
         return;
     sendmon(selmon->sel, dirtomon(arg->i));
     focusmon(&(Arg) { .i = +1 });
+    if (selmon->sel && selmon->sel->isfloating) {
+        resize(selmon->sel, selmon->mx + (selmon->mw - selmon->sel->w) / 2, selmon->my + (selmon->mh - selmon->sel->h) / 2, selmon->sel->w, selmon->sel->h, 0);
+    }
     pointerfocuswin(selmon->sel);
 }
 
@@ -2640,8 +2655,12 @@ togglefloating(const Arg *arg)
 {
     if (!selmon->sel)
         return;
-    if (selmon->sel->isfullscreen)
-        return;
+    if (selmon->sel->isfullscreen) {
+        fullscreen(NULL);
+        if (selmon->sel->isfloating)
+            return;
+    }
+
     selmon->sel->isfloating = !selmon->sel->isfloating || selmon->sel->isfixed;
 
     if (selmon->sel->isfloating) {
@@ -2683,6 +2702,31 @@ toggleallfloating(const Arg *arg)
             }
     }
     pointerfocuswin(selmon->sel);
+}
+
+void
+togglescratch(const Arg *arg)
+{
+    Client *c;
+    Monitor *m;
+    unsigned int found = 0;
+
+    for (m = mons; m && !found; m = m->next)
+        for (c = m->clients; c && !(found = !strcmp(c->name, scratchpadname)); c = c->next);
+    if (found) {
+        if (c->mon == selmon) // 在同屏幕则toggle win状态
+            togglewin(&(Arg){.v = c});
+        else {                // 不在同屏幕则将win移到当前屏幕 并显示
+            sendmon(c, selmon);
+            show(c);
+            focus(c);
+            if (c->isfloating) {
+                resize(c, selmon->mx + (selmon->mw - selmon->sel->w) / 2, selmon->my + (selmon->mh - selmon->sel->h) / 2, selmon->sel->w, selmon->sel->h, 0);
+            }
+            pointerfocuswin(c);
+        }
+    } else
+        spawn(arg);
 }
 
 void
@@ -2751,6 +2795,8 @@ void
 toggleglobal(const Arg *arg)
 {
     if (!selmon->sel)
+        return;
+    if (!strcmp(selmon->sel->name, scratchpadname))
         return;
     selmon->sel->isglobal ^= 1;
     selmon->sel->tags = selmon->sel->isglobal ? TAGMASK : selmon->tagset[selmon->seltags];
