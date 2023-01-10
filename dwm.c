@@ -86,7 +86,9 @@ enum {
     SchemeSystray,    // 托盘
     SchemeNormTag,    // 普通标签
     SchemeSelTag,     // 选中的标签
-    SchemeUnderline   // 下划线
+    SchemeUnderline,  // 下划线
+    SchemeBarEmpty,   // 状态栏空白部分
+    SchemeStatusText  // 状态栏文本
 }; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
@@ -94,7 +96,7 @@ enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetWMWindowTypeDialog, NetClientList, NetLast }; /* EWMH atoms */
 enum { Manager, Xembed, XembedInfo, XLast }; /* Xembed atoms */
 enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMLast }; /* default atoms */
-enum { ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle,
+enum { ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkBarEmpty,
        ClkClientWin, ClkRootWin, ClkLast }; /* clicks */
 enum { UP, DOWN, LEFT, RIGHT }; /* movewin */
 enum { V_EXPAND, V_REDUCE, H_EXPAND, H_REDUCE }; /* resizewins */
@@ -609,6 +611,8 @@ buttonpress(XEvent *e)
             arg.i = ev->x - (selmon->ww - status_w - (selmon == systraytomon(selmon) ? getsystraywidth() : 0));
             arg.ui = ev->button; // 1 => L，2 => M，3 => R, 5 => U, 6 => D
         } else {
+            click = ClkBarEmpty;
+
             x += blw;
             c = m->clients;
 
@@ -1047,7 +1051,7 @@ drawbar(Monitor *m)
     }
     empty_w = m->ww - x - status_w - system_w; // 最后多加了一个w
     if (empty_w > 0) {
-        drw_setscheme(drw, scheme[SchemeHid]);
+        drw_setscheme(drw, scheme[SchemeBarEmpty]);
         drw_rect(drw, x, 0, empty_w, bh, 1, 1);
     }
 
@@ -1072,6 +1076,8 @@ drawstatusbar(Monitor *m, int bh, char* stext) {
     short isCode = 0;
     char *text;
     char *p;
+    char buf8[8], buf5[5];
+    uint textsalpha;
 
     if(showsystray && m == systraytomon(m))
         system_w = getsystraywidth();
@@ -1130,17 +1136,32 @@ drawstatusbar(Monitor *m, int bh, char* stext) {
             /* process code */
             while (text[++i] != '^') {
                 if (text[i] == 'c') {
-                    char buf[8];
-                    memcpy(buf, (char*)text+i+1, 7);
-                    buf[7] = '\0';
-                    drw_clr_create(drw, &drw->scheme[ColFg], buf, 0xee);
+                    memcpy(buf8, (char*)text+i+1, 7);
+                    buf8[7] = '\0';
                     i += 7;
+
+                    textsalpha = alphas[SchemeStatusText][ColFg];
+                    if (text[i + 1] != '^') {
+                        memcpy(buf5, (char*)text+i+1, 4);
+                        buf5[4] = '\0';
+                        i += 4;
+                        sscanf(buf5, "%x", &textsalpha);
+                    }
+
+                    drw_clr_create(drw, &drw->scheme[ColFg], buf8, textsalpha);
                 } else if (text[i] == 'b') {
-                    char buf[8];
-                    memcpy(buf, (char*)text+i+1, 7);
-                    buf[7] = '\0';
-                    drw_clr_create(drw, &drw->scheme[ColBg], buf, 0x88);
+                    memcpy(buf8, (char*)text+i+1, 7);
+                    buf8[7] = '\0';
                     i += 7;
+
+                    textsalpha = alphas[SchemeStatusText][ColBg];
+                    if (text[i + 1] != '^') {
+                        memcpy(buf5, (char*)text+i+1, 4);
+                        buf5[4] = '\0';
+                        i += 4;
+                        sscanf(buf5, "%x", &textsalpha);
+                    }
+                    drw_clr_create(drw, &drw->scheme[ColBg], buf8, textsalpha);
                 } else if (text[i] == 's') {
                     while (text[i + 1] != '^') i++;
                 } else if (text[i] == 'd') {
@@ -1191,13 +1212,15 @@ clickstatusbar(const Arg *arg)
     char signal [20];
     char text [100];
     char *button = "L";
+    int limit, max = sizeof(stext);
+
 
     while (stext[++offset] != '\0') {
         // 左侧^
         if (stext[offset] == '^' && !iscode) {
             iscode = 1;
             offset++;
-            if (stext[offset] == 's') {
+            if (stext[offset] == 's') { // 查询到s->signal
                 issignal = 1;
                 signalindex = 0;
                 memset(signal, '\0', sizeof(signal));
@@ -1214,23 +1237,24 @@ clickstatusbar(const Arg *arg)
             continue;
         }
 
-        if (issignal) {
+        if (issignal) { // 逐位读取signal
             signal[signalindex++] = stext[offset];
         }
 
         // 是普通文本
         if (!iscode) {
-            // 查找到下一个^
-            int limit = 0;
-            while (stext[offset + ++limit] != '^');
-            limit++;
-            memset(text, '\0', sizeof(text));
-            strncpy(text, stext + offset, limit - 1);
-            offset += limit;
-            status_w += TEXTW(text) - lrpad;
-            if (status_w > arg->i) {
+            // 查找到下一个^ 或 游标到达最后
+            limit = 0;
+            while (stext[offset + ++limit] != '^' && offset + limit < max);
+            if (offset + limit == max)
                 break;
-            }
+
+            memset(text, '\0', sizeof(text));
+            strncpy(text, stext + offset, limit);
+            offset += --limit;
+            status_w += TEXTW(text) - lrpad;
+            if (status_w > arg->i)
+                break;
         }
     }
 
@@ -1334,7 +1358,7 @@ focusstack(const Arg *arg)
 {
     Client *tempClients[100];
     Client *c = NULL, *tc = selmon->sel;
-    int last = -1, cur = 0, issingle = issinglewin(NULL);
+    int last = -1, cur = 0, issingle = issinglewin(NULL), hasfloating = 0;
 
     if (tc && tc->isfullscreen) /* no support for focusstack with fullscreen windows */
         return;
@@ -1343,7 +1367,14 @@ focusstack(const Arg *arg)
     if (!tc)
         return;
 
+    // 判断是否有浮动窗口
+    for (c = selmon->clients; c && !hasfloating; c = c->next)
+        if (ISVISIBLE(c) && !HIDDEN(c) && c->isfloating)
+            hasfloating = 1;
+
     for (c = selmon->clients; c; c = c->next) {
+        if (hasfloating != c->isfloating) continue; // 如果有浮动窗口，只在浮动窗口中切换
+
         if (ISVISIBLE(c) && (issingle || !HIDDEN(c))) {
             last ++;
             tempClients[last] = c;
@@ -3265,7 +3296,7 @@ view(const Arg *arg)
     // 若当前tag无窗口 且附加了v参数 则执行
     if (arg->v) {
         for (c = selmon->clients; c; c = c->next)
-            if (c->tags & arg->ui && !HIDDEN(c))
+            if (c->tags & arg->ui && !HIDDEN(c) && !c->isglobal)
                 n++;
         if (n == 0) {
             spawn(&(Arg){ .v = (const char*[]){ "/bin/sh", "-c", arg->v, NULL } });

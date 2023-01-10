@@ -4,8 +4,8 @@
 source ~/.profile
 
 this=_date
-s2d_reset="^d^"
-color="^c#2D1B46^^b#335566^"
+icon_color="^c#4B005B^^b#7E51680x88^"
+text_color="^c#4B005B^^b#7E51680x99^"
 signal=$(echo "^s$this^" | sed 's/_//')
 
 update() {
@@ -25,13 +25,17 @@ update() {
         "12") time_icon="🕛" ;;
     esac
 
-    text=" $time_icon $time_text "
+    icon=" $time_icon "
+    text=" $time_text "
+
     sed -i '/^export '$this'=.*$/d' $DWM/statusbar/temp
-    printf "export %s='%s%s%s%s'\n" $this "$color" "$signal" "$text" "$s2d_reset" >> $DWM/statusbar/temp
+    printf "export %s='%s%s%s%s%s'\n" $this "$signal" "$icon_color" "$icon" "$text_color" "$text" >> $DWM/statusbar/temp
 }
 
 notify() {
-    notify-send "  Calendar" "\n$(cal --color=always | sed 1,2d | sed 's/..7m/<b><span color="#A1E1FF">/;s/..27m/<\/span><\/b>/' )" -r 9527
+    _cal=$(cal --color=always | sed 1,2d | sed 's/..7m/<b><span color="#ff79c6">/;s/..27m/<\/span><\/b>/' )
+    _todo=$(cat ~/.todo.md | sed 's/\(- \[x\] \)\(.*\)/<span color="#ff79c6">\1<s>\2<\/s><\/span>/' | sed 's/- \[[ |x]\] //')
+    notify-send "  Calendar" "\n$_cal\n  TODO\n————————————————————\n$_todo" -r 9527
 }
 
 notify_todo() {
@@ -41,10 +45,7 @@ notify_todo() {
 click() {
     case "$1" in
         L) notify ;;
-        M) st -g 82x25 -c noborder -e nvim ~/.todo.md ;;
         R) notify_todo ;;
-        U) ;;
-        D) ;;
     esac
 }
 

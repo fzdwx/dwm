@@ -18,10 +18,9 @@ static const int   nmaster               = 1;         /* 主工作区 窗口数�
 static const unsigned int snap           = 10;        /* 边缘依附宽度 */
 static const unsigned int baralpha       = 0xc0;      /* 状态栏透明度 */
 static const unsigned int borderalpha    = 0xdd;      /* 边框透明度 */
-static const char *fonts[]               = { "JetBrainsMono Nerd Font:style=medium:size=13",
-                                            "JoyPixels:pixelsize=10:antialias=true:autohint=true",
-                                             "monospace:size=13"
-                                          };
+static const char *fonts[] = {
+    "JetBrainsMono Nerd Font:style=medium:size=13",
+    "JoyPixels:pixelsize=10:antialias=true:autohint=true", "monospace:size=13"};
 static const char *colors[][3]           = {          /* 颜色设置 ColFg, ColBg, ColBorder */
     [SchemeNorm] = { "#bbbbbb", "#333333", "#444444" },
     [SchemeSel] = { "#ffffff", "#37474F", "#42A5F5" },
@@ -31,6 +30,7 @@ static const char *colors[][3]           = {          /* 颜色设置 ColFg, Col
     [SchemeUnderline] = { "#7799AA", NULL, NULL },
     [SchemeNormTag] = { "#bbbbbb", "#333333", NULL },
     [SchemeSelTag] = { "#eeeeee", "#333333", NULL },
+    [SchemeBarEmpty] = { NULL, "#111111", NULL },
 };
 static const unsigned int alphas[][3]    = {          /* 透明度设置 ColFg, ColBg, ColBorder */
     [SchemeNorm] = { OPAQUE, baralpha, borderalpha },
@@ -38,6 +38,8 @@ static const unsigned int alphas[][3]    = {          /* 透明度设置 ColFg, 
     [SchemeSelGlobal] = { OPAQUE, baralpha, borderalpha },
     [SchemeNormTag] = { OPAQUE, baralpha, borderalpha },
     [SchemeSelTag] = { OPAQUE, baralpha, borderalpha },
+    [SchemeBarEmpty] = { NULL, 0xa0a, NULL },
+    [SchemeStatusText] = { OPAQUE, 0x88, NULL },
 };
 
 /* 自定义 scratchpad instance */
@@ -50,16 +52,16 @@ static const char *statusbarscript = "$DWM/statusbar/statusbar.sh";
 /* 自定义tag名称 */
 /* 自定义特定实例的显示状态 */
 //            ﮸  ﭮ 切
-// 对应的tag序号以及快捷键:   0:1  1:2  2:3  3:4  4:5  5:c  6:m  7:6  8:9  9:0  10:w 11:l
-static const char *tags[] = { "", "", "", "", "", "", "", "", "ﭮ", "ﬄ", "﬐", "" };
+// 对应的tag序号以及快捷键:   0:1  1:2  2:3  3:4  4:5  5:c  6:m  7:6  8:9  9:0
+// 10:w 11:l
+static const char *tags[] = {"", "", "", "", "", "", "", "", "ﭮ", "🐧", "﬐", ""};
 static const Rule rules[] = {
     /* class                 instance              title             tags mask     isfloating  isglobal    isnoborder monitor */
     {"chrome",               NULL,                 NULL,             1 << 5,       0,          0,          0,        -1 },
     {"Chromium",             NULL,                 NULL,             1 << 5,       0,          0,          0,        -1 },
     {"music",                NULL,                 NULL,             1 << 6,       1,          0,          1,        -1 },
     {"TelegramDesktop",      NULL,                 NULL,             1 << 7,       0,          0,          0,        -1 },
-    { NULL,                 "discord",             NULL,             1 << 8,       0,          0,          0,        -1 },
-    { NULL,                 "icalingua",           NULL,             1 << 9,       0,          0,          1,        -1 },
+    { NULL,                 "qq",                  NULL,             1 << 9,       0,          0,          1,        -1 },
     { NULL,                 "wechat.exe",          NULL,             1 << 10,      0,          0,          0,        -1 },
     { NULL,                 "wxwork.exe",          NULL,             1 << 11,      0,          0,          0,        -1 },
     { NULL,                  NULL,                "broken",          0,            1,          0,          0,        -1 },
@@ -81,7 +83,10 @@ static const Layout layouts[] = {
     { "﩯",  magicgrid },    /* 网格 */
 };
 
-#define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
+#define SHCMD(cmd)                                                             \
+  {                                                                            \
+    .v = (const char *[]) { "/bin/sh", "-c", cmd, NULL }                       \
+  }
 #define MODKEY Mod4Mask
 #define TAGKEYS(KEY, TAG, cmd1, cmd2) \
     { MODKEY,              KEY, view,       {.ui = 1 << TAG, .v = cmd1} }, \
@@ -164,7 +169,7 @@ static Key keys[] = {
     TAGKEYS(XK_6, 5,  0,  0)
     TAGKEYS(XK_8, 7,  "telegram-desktop", 0)
     TAGKEYS(XK_9, 8,  "discord", 0)
-    TAGKEYS(XK_0, 9, "icalingua", 0)
+    TAGKEYS(XK_0, 9,  "linuxqq", 0)
     TAGKEYS(XK_w, 10, "/opt/apps/com.qq.weixin.deepin/files/run.sh", 0)
     TAGKEYS(XK_l, 11, "/opt/apps/com.qq.weixin.work.deepin/files/run.sh", 0)
 };
@@ -188,4 +193,12 @@ static Button buttons[] = {
     { ClkStatusText,       0,               Button3,          clickstatusbar,{0} },                                   // 右键        |  点击状态栏   |  根据状态栏的信号执行 ~/scripts/dwmstatusbar.sh $signal R
     { ClkStatusText,       0,               Button4,          clickstatusbar,{0} },                                   // 鼠标滚轮上  |  状态栏       |  根据状态栏的信号执行 ~/scripts/dwmstatusbar.sh $signal U
     { ClkStatusText,       0,               Button5,          clickstatusbar,{0} },                                   // 鼠标滚轮下  |  状态栏       |  根据状态栏的信号执行 ~/scripts/dwmstatusbar.sh $signal D
+
+    /* 点击桌面空白处 */
+    { ClkRootWin,          0,               Button1,          spawn, SHCMD("rofi -show window  -icon-theme Papirus -show-icons") },        // 左键        |  桌面空白处   |  rofi 执行 window
+    { ClkRootWin,          0,               Button3,          spawn, SHCMD("rofi -show drun    -icon-theme Papirus -show-icons") },        // 右键        |  桌面空白处   |  rofi 执行 drun
+                                                                                                                      //
+    /* 点击bar空白处 */
+    { ClkBarEmpty,         0,               Button1,          spawn, SHCMD("rofi -show window  -icon-theme Papirus -show-icons") },        // 左键        |  bar空白处    |  rofi 执行 window
+    { ClkBarEmpty,         0,               Button3,          spawn, SHCMD("rofi -show drun    -icon-theme Papirus -show-icons") },          // 右键        |  bar空白处    |  rofi 执行 drun
 };

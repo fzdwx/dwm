@@ -17,30 +17,30 @@
 source ~/.profile
 
 this=_vol
-s2d_reset="^d^"
-color="^c#553388^^b#334466^"
+icon_color="^c#442266^^b#7879560x88^"
+text_color="^c#442266^^b#7879560x99^"
 signal=$(echo "^s$this^" | sed 's/_//')
 
 update() {
     sink=$(pactl info | grep 'Default Sink' | awk '{print $3}')
     volunmuted=$(pactl list sinks | grep $sink -A 6 | sed -n '7p' | grep 'Mute: no')
     vol_text=$(pactl list sinks | grep $sink -A 7 | sed -n '8p' | awk '{printf int($5)}')
-    if [ "$vol_text" -eq 0 ] || [ ! "$volunmuted" ]; then vol_text="--"; vol_icon="🔇";
+    if [ ! "$volunmuted" ];      then vol_text="--"; vol_icon="🔇";
+    elif [ "$vol_text" -eq 0 ];  then vol_icon="🔉"; vol_text="00";
     elif [ "$vol_text" -lt 10 ]; then vol_icon="🔉"; vol_text=0$vol_text;
-    elif [ "$vol_text" -le 20 ]; then vol_icon="🔉";
-    elif [ "$vol_text" -le 60 ]; then vol_icon="🔊";
+    elif [ "$vol_text" -le 50 ]; then vol_icon="🔊";
     else vol_icon="🔊"; fi
 
-    vol_text=$vol_text%
+    icon=" $vol_icon "
+    text=" $vol_text% "
 
-    text=" $vol_icon $vol_text "
-    echo $text
     sed -i '/^export '$this'=.*$/d' $DWM/statusbar/temp
-    printf "export %s='%s%s%s%s'\n" $this "$color" "$signal" "$text" "$s2d_reset" >> $DWM/statusbar/temp
+    printf "export %s='%s%s%s%s%s'\n" $this "$signal" "$icon_color" "$icon" "$text_color" "$text" >> $DWM/statusbar/temp
 }
 
 notify() {
-    notify-send -r 9527 音量 "$(update)" -i audio-volume-medium
+    update
+    notify-send -r 9527 -h int:value:$vol_text -h string:hlcolor:#dddddd "$vol_icon Volume"
 }
 
 click() {
