@@ -127,7 +127,7 @@ struct Client {
 	int bw, oldbw;
     int taskw;
 	unsigned int tags;
-	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isglobal, isnoborder;
+	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isglobal, isnoborder, isscratchpad;
 	Client *next;
 	Client *snext;
 	Monitor *mon;
@@ -189,7 +189,7 @@ struct Systray {
 };
 
 /* function declarations */
-static void logtofile(char log[100]);
+static void logtofile(const char *fmt, ...);
 
 static void tile(Monitor *m);
 static void magicgrid(Monitor *m);
@@ -351,6 +351,8 @@ static int screen;
 static int sw, sh;           /* X display screen geometry width, height */
 static int bh, blw = 0;      /* bar geometry */
 static int lrpad;            /* sum of left and right padding for text */
+static int vp;               /* vertical padding for bar */
+static int sp;               /* side padding for bar */
 static int (*xerrorxlib)(Display *, XErrorEvent *);
 static unsigned int numlockmask = 0;
 static void (*handler[LASTEvent]) (XEvent *) = {
@@ -400,10 +402,17 @@ struct Pertag {
 
 /* function implementations */
 void
-logtofile(char log[100])
+logtofile(const char *fmt, ...)
 {
-    char cmd [150];
-    sprintf(cmd, "echo '%s' >> ~/log", log);
+    char buf[256];
+    char cmd[256];
+    va_list ap;
+    va_start(ap, fmt);
+    vsprintf((char *)buf, fmt, ap);
+    va_end(ap);
+    uint i = strlen((const char *)buf);
+
+    sprintf(cmd, "echo '%.*s' >> ~/log", i, buf);
     system(cmd);
 }
 
@@ -420,6 +429,7 @@ applyrules(Client *c)
     c->isfloating = 0;
     c->isglobal = 0;
     c->isnoborder = 0;
+    c->isscratchpad = 0;
     c->tags = 0;
     XGetClassHint(dpy, c->win, &ch);
     class    = ch.res_class ? ch.res_class : broken;
@@ -442,8 +452,10 @@ applyrules(Client *c)
                 c->mon = m;
         }
     }
-    if (!strcmp(c->name, scratchpadname)) // scratchpad is default global
-        c->isglobal = 1;
+    if (!strcmp(c->name, scratchpadname)) {
+        c->isscratchpad = 1;
+        c->isglobal = 1; // scratchpad is default global
+    }
     if (ch.res_class)
         XFree(ch.res_class);
     if (ch.res_name)
@@ -569,9 +581,9 @@ buttonpress(XEvent *e)
 {
     unsigned int i, x, click, occ = 0;
     Arg arg = {0};
-    Client *c;
     Monitor *m;
     XButtonPressedEvent *ev = &e->xbutton;
+    Client *c = wintoclient(ev->window);
 
     // 判断鼠标点击的位置
     click = ClkRootWin;
@@ -582,7 +594,8 @@ buttonpress(XEvent *e)
         focus(NULL);
     }
     int status_w = drawstatusbar(selmon, bh, stext);
-    if (ev->window == selmon->barwin) { // 点击在bar上
+    int system_w = getsystraywidth();
+    if (ev->window == selmon->barwin || (!c && selmon->showbar && (topbar ? ev->y <= selmon->wy : ev->y >= selmon->wy))) { // 点击在bar上
         i = x = 0;
         blw = TEXTW(selmon->ltsymbol);
 
@@ -606,9 +619,9 @@ buttonpress(XEvent *e)
             arg.ui = 1 << i;
         } else if (ev->x < x + blw)
             click = ClkLtSymbol;
-        else if (ev->x > selmon->ww - status_w -  (selmon == systraytomon(selmon) ? getsystraywidth() : 0)) {
+        else if (ev->x > selmon->ww - status_w - 2 * sp - (selmon == systraytomon(selmon) ? (system_w ? system_w + systraypinning + 2 : 0) : 0)) {
             click = ClkStatusText;
-            arg.i = ev->x - (selmon->ww - status_w - (selmon == systraytomon(selmon) ? getsystraywidth() : 0));
+            arg.i = ev->x - (selmon->ww - status_w - 2 * sp - (selmon == systraytomon(selmon) ? (system_w ? system_w + systraypinning + 2 : 0) : 0));
             arg.ui = ev->button; // 1 => L，2 => M，3 => R, 5 => U, 6 => D
         } else {
             click = ClkBarEmpty;
@@ -616,14 +629,13 @@ buttonpress(XEvent *e)
             x += blw;
             c = m->clients;
 
-            if (m->bt == 0) return;
-
-            do {
-                if (!ISVISIBLE(c))
-                    continue;
-                else
-                    x += c->taskw;
-            } while (ev->x > x && (c = c->next));
+            if (m->bt != 0)
+                do {
+                    if (!ISVISIBLE(c))
+                        continue;
+                    else
+                        x += c->taskw;
+                } while (ev->x > x && (c = c->next));
 
             if (c) {
                 click = ClkWinTitle;
@@ -636,6 +648,7 @@ buttonpress(XEvent *e)
         XAllowEvents(dpy, ReplayPointer, CurrentTime);
         click = ClkClientWin;
     }
+
     for (i = 0; i < LENGTH(buttons); i++)
         if (click == buttons[i].click && buttons[i].func && buttons[i].button == ev->button
                 && CLEANMASK(buttons[i].mask) == CLEANMASK(ev->state))
@@ -979,7 +992,7 @@ drawbar(Monitor *m)
     // 绘制STATUSBAR
     status_w = drawstatusbar(m, bh, stext);
 
-    // 未知
+    // 判断tag显示数量
     for (c = m->clients; c; c = c->next) {
         if (ISVISIBLE(c))
             n++;
@@ -1049,7 +1062,8 @@ drawbar(Monitor *m)
             tasks_w += w;
         }
     }
-    empty_w = m->ww - x - status_w - system_w; // 最后多加了一个w
+    /** 空白部分的宽度 = 总宽度 - 状态栏的宽度 - 托盘的宽度 - sp (托盘存在时 额外多-一个 systrayspadding) */
+    empty_w = m->ww - x - status_w - system_w - 2 * sp - (system_w ? systrayspadding : 0);
     if (empty_w > 0) {
         drw_setscheme(drw, scheme[SchemeBarEmpty]);
         drw_rect(drw, x, 0, empty_w, bh, 1, 1);
@@ -1112,7 +1126,7 @@ drawstatusbar(Monitor *m, int bh, char* stext) {
     text = p;
 
     // w += 2; /* 1px padding on both sides */
-    x = m->ww - w - system_w;
+    x = m->ww - w - system_w - 2 * sp - (system_w ? systrayspadding : 0); // 托盘存在时 额外多-一个systrayspadding
 
     drw_setscheme(drw, scheme[LENGTH(colors)]);
     drw->scheme[ColFg] = scheme[SchemeNorm][ColFg];
@@ -1213,7 +1227,6 @@ clickstatusbar(const Arg *arg)
     char text [100];
     char *button = "L";
     int limit, max = sizeof(stext);
-
 
     while (stext[++offset] != '\0') {
         // 左侧^
@@ -1358,7 +1371,7 @@ focusstack(const Arg *arg)
 {
     Client *tempClients[100];
     Client *c = NULL, *tc = selmon->sel;
-    int last = -1, cur = 0, issingle = issinglewin(NULL), hasfloating = 0;
+    int last = -1, cur = 0, issingle = issinglewin(NULL);
 
     if (tc && tc->isfullscreen) /* no support for focusstack with fullscreen windows */
         return;
@@ -1367,14 +1380,7 @@ focusstack(const Arg *arg)
     if (!tc)
         return;
 
-    // 判断是否有浮动窗口
-    for (c = selmon->clients; c && !hasfloating; c = c->next)
-        if (ISVISIBLE(c) && !HIDDEN(c) && c->isfloating)
-            hasfloating = 1;
-
     for (c = selmon->clients; c; c = c->next) {
-        if (hasfloating != c->isfloating) continue; // 如果有浮动窗口，只在浮动窗口中切换
-
         if (ISVISIBLE(c) && (issingle || !HIDDEN(c))) {
             last ++;
             tempClients[last] = c;
@@ -1470,7 +1476,7 @@ getsystraywidth()
     Client *i;
     if(showsystray)
         for(i = systray->icons; i; w += MAX(i->w, bh) + systrayspacing, i = i->next) ;
-    return w ? w + systrayspacing : 1;
+    return w ? w + systrayspacing : 0;
 }
 
 int
@@ -2126,9 +2132,10 @@ resize(Client *c, int x, int y, int w, int h, int interact)
 void
 resizebarwin(Monitor *m) {
     unsigned int w = m->ww;
+    uint system_w = getsystraywidth();
     if (showsystray && m == systraytomon(m))
-        w -= getsystraywidth();
-    XMoveResizeWindow(dpy, m->barwin, m->wx, m->by, w, bh);
+        w -= system_w;
+    XMoveResizeWindow(dpy, m->barwin, m->wx + sp, m->by + vp, w -  2 * sp - (m == systraytomon(m) && system_w ? systrayspadding : 0), bh); // 如果托盘存在 额外减去systrayspadding
 }
 
 void
@@ -2157,14 +2164,9 @@ void
 resizemouse(const Arg *arg)
 {
     int ocx, ocy, nw, nh;
-    int ocx2, ocy2, nx, ny;
     Client *c;
     Monitor *m;
     XEvent ev;
-    int horizcorner, vertcorner;
-	int di;
-	unsigned int dui;
-	Window dummy;
     Time lasttime = 0;
 
     if (!(c = selmon->sel))
@@ -2174,18 +2176,10 @@ resizemouse(const Arg *arg)
     restack(selmon);
     ocx = c->x;
     ocy = c->y;
-	ocx2 = c->x + c->w;
-	ocy2 = c->y + c->h;
     if (XGrabPointer(dpy, root, False, MOUSEMASK, GrabModeAsync, GrabModeAsync,
                 None, cursor[CurResize]->cursor, CurrentTime) != GrabSuccess)
         return;
-    if (!XQueryPointer(dpy, c->win, &dummy, &dummy, &di, &di, &nx, &ny, &dui))
-        return;
-    horizcorner = nx < c->w / 2;
-    vertcorner = ny < c->h / 2;
-	XWarpPointer (dpy, None, c->win, 0, 0, 0, 0,
-			horizcorner ? (-c->bw) : (c->w + c->bw -1),
-			vertcorner  ? (-c->bw) : (c->h + c->bw -1));
+    XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w + c->bw - 1, c->h + c->bw - 1);
     do {
         XMaskEvent(dpy, MOUSEMASK|ExposureMask|SubstructureRedirectMask, &ev);
         switch(ev.type) {
@@ -2199,10 +2193,8 @@ resizemouse(const Arg *arg)
                     continue;
                 lasttime = ev.xmotion.time;
 
-	    		nx = horizcorner ? ev.xmotion.x : c->x;
-	    		ny = vertcorner ? ev.xmotion.y : c->y;
-	    		nw = MAX(horizcorner ? (ocx2 - nx) : (ev.xmotion.x - ocx - 2 * c->bw + 1), 1);
-	    		nh = MAX(vertcorner ? (ocy2 - ny) : (ev.xmotion.y - ocy - 2 * c->bw + 1), 1);
+                nw = MAX(ev.xmotion.x - ocx - 2 * c->bw + 1, 1);
+                nh = MAX(ev.xmotion.y - ocy - 2 * c->bw + 1, 1);
                 if (c->mon->wx + nw >= selmon->wx && c->mon->wx + nw <= selmon->wx + selmon->ww
                         && c->mon->wy + nh >= selmon->wy && c->mon->wy + nh <= selmon->wy + selmon->wh) {
                     if (!c->isfloating && (abs(nw - c->w) > snap || abs(nh - c->h) > snap)) {
@@ -2211,13 +2203,11 @@ resizemouse(const Arg *arg)
                     }
                 }
                 if (c->isfloating)
-                    resize(c, nx, ny, nw, nh, 1);
+                    resize(c, c->x, c->y, nw, nh, 1);
                 break;
         }
     } while (ev.type != ButtonRelease);
-	XWarpPointer(dpy, None, c->win, 0, 0, 0, 0,
-		      horizcorner ? (-c->bw) : (c->w + c->bw - 1),
-		      vertcorner ? (-c->bw) : (c->h + c->bw - 1));
+    XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w + c->bw - 1, c->h + c->bw - 1);
     XUngrabPointer(dpy, CurrentTime);
     while (XCheckMaskEvent(dpy, EnterWindowMask, &ev));
     if ((m = recttomon(c->x, c->y, c->w, c->h)) != selmon) {
@@ -2491,6 +2481,8 @@ setup(void)
         die("no fonts could be loaded.");
     lrpad = drw->fonts->h;
     bh = drw->fonts->h + 2;
+	sp = sidepad;
+	vp = (topbar == 1) ? vertpad : - vertpad;
     updategeom();
     /* init atoms */
     utf8string = XInternAtom(dpy, "UTF8_STRING", False);
@@ -2743,7 +2735,7 @@ togglescratch(const Arg *arg)
     unsigned int found = 0;
 
     for (m = mons; m && !found; m = m->next)
-        for (c = m->clients; c && !(found = !strcmp(c->name, scratchpadname)); c = c->next);
+        for (c = m->clients; c && !(found = c->isscratchpad); c = c->next);
     if (found) {
         if (c->mon == selmon) // 在同屏幕则toggle win状态
             togglewin(&(Arg){.v = c});
@@ -2768,6 +2760,10 @@ restorewin(const Arg *arg) {
             show(hiddenWinStack[i]);
             focus(hiddenWinStack[i]);
             restack(selmon);
+            // need set j<hiddenWinStackTop+1. Because show will reduce hiddenWinStackTop value.
+            for (int j = i; j < hiddenWinStackTop+1; ++j) {
+                hiddenWinStack[j] = hiddenWinStack[j + 1];
+            }
             return;
         }
         --i;
@@ -2827,7 +2823,7 @@ toggleglobal(const Arg *arg)
 {
     if (!selmon->sel)
         return;
-    if (!strcmp(selmon->sel->name, scratchpadname))
+    if (selmon->sel->isscratchpad) // is scratchpad always global
         return;
     selmon->sel->isglobal ^= 1;
     selmon->sel->tags = selmon->sel->isglobal ? TAGMASK : selmon->tagset[selmon->seltags];
@@ -2928,11 +2924,11 @@ updatebarpos(Monitor *m)
     m->wy = m->my;
     m->wh = m->mh;
     if (m->showbar) {
-        m->wh -= bh;
-        m->by = m->topbar ? m->wy : m->wy + m->wh;
-        m->wy = m->topbar ? m->wy + bh : m->wy;
+        m->wh = m->wh - vertpad - bh;
+        m->by = m->topbar ? m->wy : m->wy + m->wh + vertpad;
+        m->wy = m->topbar ? m->wy + bh + vp : m->wy;
     } else
-        m->by = -bh;
+        m->by = -bh - vp;
 }
 
 void
@@ -3164,7 +3160,7 @@ updatesystray(void)
         /* init systray */
         if (!(systray = (Systray *)calloc(1, sizeof(Systray))))
             die("fatal: could not malloc() %u bytes\n", sizeof(Systray));
-        systray->win = XCreateSimpleWindow(dpy, root, x, m->by, w, bh, 0, 0, scheme[SchemeSystray][ColBg].pixel);
+        systray->win = XCreateSimpleWindow(dpy, root, x - sp, m->by + vp, w, bh, 0, 0, scheme[SchemeSystray][ColBg].pixel);
         wa.event_mask        = ButtonPressMask | ExposureMask;
         wa.override_redirect = True;
         wa.background_pixel  = scheme[SchemeSystray][ColBg].pixel;
@@ -3199,8 +3195,8 @@ updatesystray(void)
     }
     w = w ? w + systrayspacing : 1;
     x -= w;
-    XMoveResizeWindow(dpy, systray->win, x, m->by, w, bh);
-    wc.x = x; wc.y = m->by; wc.width = w; wc.height = bh;
+    XMoveResizeWindow(dpy, systray->win, x - sp, m->by + vp, w, bh);
+    wc.x = x - sp; wc.y = m->by + vp; wc.width = w; wc.height = bh;
     wc.stack_mode = Above; wc.sibling = m->barwin;
     XConfigureWindow(dpy, systray->win, CWX|CWY|CWWidth|CWHeight|CWSibling|CWStackMode, &wc);
     XMapWindow(dpy, systray->win);

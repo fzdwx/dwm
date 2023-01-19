@@ -5,10 +5,13 @@ static const int newclientathead         = 0;         /* 定义新窗口在栈�
 static const unsigned int borderpx       = 2;         /* 窗口边框大小 */
 static const unsigned int systraypinning = 1;         /* 托盘跟随的显示器 0代表不指定显示器 */
 static const unsigned int systrayspacing = 1;         /* 托盘间距 */
+static const unsigned int systrayspadding = 5;        /* 托盘和状态栏的间隙 */
 static int gappi                         = 12;        /* 窗口与窗口 缝隙大小 */
 static int gappo                         = 12;        /* 窗口与边缘 缝隙大小 */
 static const int _gappo                  = 12;        /* 窗口与窗口 缝隙大小 不可变 用于恢复时的默认值 */
 static const int _gappi                  = 12;        /* 窗口与边缘 缝隙大小 不可变 用于恢复时的默认值 */
+static const int vertpad                 = 5;         /* vertical padding of bar */
+static const int sidepad                 = 5;         /* horizontal padding of bar */
 static const int overviewgappi           = 24;        /* overview时 窗口与边缘 缝隙大小 */
 static const int overviewgappo           = 60;        /* overview时 窗口与窗口 缝隙大小 */
 static const int showbar                 = 1;         /* 是否显示状态栏 */
@@ -88,9 +91,9 @@ static const Layout layouts[] = {
     .v = (const char *[]) { "/bin/sh", "-c", cmd, NULL }                       \
   }
 #define MODKEY Mod4Mask
-#define TAGKEYS(KEY, TAG, cmd1, cmd2) \
-    { MODKEY,              KEY, view,       {.ui = 1 << TAG, .v = cmd1} }, \
-    { MODKEY|ShiftMask,    KEY, tag,        {.ui = 1 << TAG, .v = cmd2} }, \
+#define TAGKEYS(KEY, TAG, cmd) \
+    { MODKEY,              KEY, view,       {.ui = 1 << TAG, .v = cmd} }, \
+    { MODKEY|ShiftMask,    KEY, tag,        {.ui = 1 << TAG} }, \
     { MODKEY|ControlMask,  KEY, toggleview, {.ui = 1 << TAG} }, \
 
 static Key keys[] = {
@@ -160,18 +163,18 @@ static Key keys[] = {
     /* super shift key : 将聚焦窗口移动到对应tag */
     /* 若跳转后的tag无窗口且附加了cmd1或者cmd2就执行对应的cmd */
     /* key tag cmd1 cmd2 */
-    TAGKEYS(XK_1, 0,  0,  0)
-    TAGKEYS(XK_2, 1,  0,  0)
-    TAGKEYS(XK_3, 2,  0,  0)
-    TAGKEYS(XK_4, 3,  0,  0)
-    TAGKEYS(XK_5, 4,  0,  0)
-    TAGKEYS(XK_c, 5,  "google-chrome-stable", 0)
-    TAGKEYS(XK_6, 5,  0,  0)
-    TAGKEYS(XK_8, 7,  "telegram-desktop", 0)
-    TAGKEYS(XK_9, 8,  "discord", 0)
-    TAGKEYS(XK_0, 9,  "linuxqq", 0)
-    TAGKEYS(XK_w, 10, "/opt/apps/com.qq.weixin.deepin/files/run.sh", 0)
-    TAGKEYS(XK_l, 11, "/opt/apps/com.qq.weixin.work.deepin/files/run.sh", 0)
+    TAGKEYS(XK_1, 0,  0)
+    TAGKEYS(XK_2, 1,  0)
+    TAGKEYS(XK_3, 2,  0)
+    TAGKEYS(XK_4, 3,  0)
+    TAGKEYS(XK_5, 4,  0)
+    TAGKEYS(XK_c, 5,  "google-chrome-stable")
+    TAGKEYS(XK_6, 5,  0)
+    TAGKEYS(XK_8, 7,  "telegram-desktop")
+    TAGKEYS(XK_9, 8,  "discord")
+    TAGKEYS(XK_0, 9,  "linuxqq")
+    TAGKEYS(XK_w, 10, "/opt/apps/com.qq.weixin.deepin/files/run.sh")
+    TAGKEYS(XK_l, 11, "/opt/apps/com.qq.weixin.work.deepin/files/run.sh")
 };
 static Button buttons[] = {
     /* click               event mask       button            function       argument  */

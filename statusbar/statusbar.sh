@@ -7,8 +7,7 @@ update() {
     [ ! "$1" ] && return                                                 # 当指定模块为空时 结束
     printf "update $1:\t"                                                # 输出 update cpu mem ...
     bash $DWM/statusbar/packages/$1.sh                                   # 执行指定模块脚本
-    shift 1                                                              # 从参数列表中删除第一个参数
-    update $*                                                            # 递归调用
+    shift 1;update $*                                                              # 从参数列表中删除第一个参数                                                            # 递归调用
 }
 
 # 处理状态栏点击
