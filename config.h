@@ -24,10 +24,11 @@ static const unsigned int borderalpha    = 0xdd;      /* 边框透明度 */
 static const char *fonts[] = {
     "JetBrainsMono Nerd Font:style=medium:size=13",
     "JoyPixels:pixelsize=10:antialias=true:autohint=true", "monospace:size=13"};
-static const char *colors[][3]           = {          /* 颜色设置 ColFg, ColBg, ColBorder */
-    [SchemeNorm] = { "#bbbbbb", "#333333", "#444444" },
-    [SchemeSel] = { "#ffffff", "#37474F", "#42A5F5" },
-    [SchemeSelGlobal] = { "#ffffff", "#37474F", "#FFC0CB" },
+static const char *colors[][3]           = {
+    /* 颜色设置 ColFg, ColBg, ColBorder */
+    [SchemeNorm] = { "#bbbbbb", "#333333", "#a277ff" },
+    [SchemeSel] = { "#ffffff", "#37474F", "#a277ff" },
+    [SchemeSelGlobal] = { "#ffffff", "#37474F", "#61ffca" },
     [SchemeHid] = { "#dddddd", NULL, NULL },
     [SchemeSystray] = { NULL, "#7799AA", NULL },
     [SchemeUnderline] = { "#7799AA", NULL, NULL },
@@ -35,7 +36,8 @@ static const char *colors[][3]           = {          /* 颜色设置 ColFg, Col
     [SchemeSelTag] = { "#eeeeee", "#333333", NULL },
     [SchemeBarEmpty] = { NULL, "#111111", NULL },
 };
-static const unsigned int alphas[][3]    = {          /* 透明度设置 ColFg, ColBg, ColBorder */
+static const unsigned int alphas[][3]    = {
+         /* 透明度设置 ColFg, ColBg, ColBorder */
     [SchemeNorm] = { OPAQUE, baralpha, borderalpha },
     [SchemeSel] = { OPAQUE, baralpha, borderalpha },
     [SchemeSelGlobal] = { OPAQUE, baralpha, borderalpha },
