@@ -5,3 +5,7 @@ dwm
 .ccls-cache/
 compile_commands.json
 .cache
+
+DEF/statusbar/temp
+
+.*temp
