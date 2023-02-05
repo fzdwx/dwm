@@ -1,8 +1,5 @@
 .idea
 temp
-config.h
-autostart.sh
-statusbar/
 
 dwm
 *.o
