@@ -59,7 +59,7 @@ static const char *statusbarscript = "$DWM/statusbar/statusbar.sh";
 //            ﮸  ﭮ 切
 // 对应的tag序号以及快捷键:   0:1  1:2  2:3  3:4  4:5  5:c  6:m  7:6  8:9  9:0
 // 10:w 11:l
-static const char *tags[] = {"", "", "", "", "", "", "", "", "ﭮ", "🐧", "﬐", ""};
+static const char *tags[] = {"🤖", "", "", "", "", "", "", "", "ﭮ", "ﬄ", "﬐", ""};
 static const Rule rules[] = {
     /* class                 instance              title             tags mask     isfloating  isglobal    isnoborder monitor */
     {"chrome",               NULL,                 NULL,             1 << 5,       0,          0,          0,        -1 },

@@ -16,13 +16,14 @@ settings() {
 daemons() {
     [ $1 ] && sleep $1
     $DWM/statusbar/statusbar.sh cron &        # 开启状态栏定时更新
-    fcitx5 &                                  # 开启输入法
+    fcitx5 &                                 # 开启输入法
     flameshot &                               # 截图要跑一个程序在后台 不然无法将截图保存到剪贴板
     dunst -conf $DWM/conf/dunst.conf & # 开启通知server
-    picom --experimental-backends --config $DWM/conf/picom.conf >> /dev/null 2>&1 & # 开启picom
+    # picom --experimental-backends --config $DWM/conf/picom.conf >> /dev/null 2>&1 & # 开启picom
+    picom --experimental-backends >> /dev/null 2>&1 & # 开启picom
     /opt/clash/cfw &
     feh --randomize --bg-fill ~/Pictures/bg/*
-    resetDns
+#    resetDns
 }
 
 
