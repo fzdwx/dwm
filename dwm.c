@@ -180,6 +180,7 @@ typedef struct {
     int isglobal;
 	int isnoborder;
 	int monitor;
+    uint floatposition;
 } Rule;
 
 typedef struct Systray   Systray;
@@ -247,8 +248,6 @@ static void hidewin(const Arg *arg);
 static void hideotherwins(const Arg *arg);
 static void showonlyorall(const Arg *arg);
 static int issinglewin(const Arg *arg);
-static void togglewin(const Arg *arg);
-static void toggleglobal(const Arg *arg);
 static void restorewin(const Arg *arg);
 
 static void incnmaster(const Arg *arg);
@@ -307,6 +306,11 @@ static void togglesystray();
 static void togglefloating(const Arg *arg);
 static void toggleallfloating(const Arg *arg);
 static void togglescratch(const Arg *arg);
+static void toggleview(const Arg *arg);
+static void toggleoverview(const Arg *arg);
+static void togglewin(const Arg *arg);
+static void toggleglobal(const Arg *arg);
+static void toggleborder(const Arg *arg);
 
 static void unfocus(Client *c, int setfocus);
 static void unmanage(Client *c, int destroyed);
@@ -331,8 +335,6 @@ static void setgap(const Arg *arg);
 static void view(const Arg *arg);
 static void viewtoleft(const Arg *arg);
 static void viewtoright(const Arg *arg);
-static void toggleview(const Arg *arg);
-static void toggleoverview(const Arg *arg);
 
 static Client *wintoclient(Window w);
 static Monitor *wintomon(Window w);
@@ -437,23 +439,40 @@ applyrules(Client *c)
 
     for (i = 0; i < LENGTH(rules); i++) {
         r = &rules[i];
-        if ((!r->title || strstr(c->name, r->title))
-                && (!r->class || strstr(class, r->class))
-                && (!r->instance || strstr(instance, r->instance)))
+        // 当rule中定义了一个或多个属性时，只要有一个属性匹配，就认为匹配成功
+        if ((r->title && strstr(c->name, r->title))
+                || (r->class && strstr(class, r->class))
+                || (r->instance && strstr(instance, r->instance)))
         {
             c->isfloating = r->isfloating;
             c->isglobal = r->isglobal;
             c->isnoborder = r->isnoborder;
             c->tags |= r->tags;
-            if (r->isnoborder)
-                c->bw = 0;
+            c->bw = c->isnoborder ? 0 : borderpx;
             for (m = mons; m && m->num != r->monitor; m = m->next);
             if (m)
                 c->mon = m;
+            // 如果设定了floatposition 且未指定xy，设定窗口位置
+            if (r->isfloating && c->x == 0 && c->y == 0) {
+                switch (r->floatposition) {
+                    case 1: c->x = selmon->wx + gappo; c->y = selmon->wy + gappo; break; // 左上
+                    case 2: c->x = selmon->wx + (selmon->ww - WIDTH(c)) / 2 - gappo; c->y = selmon->wy + gappo; break; // 中上
+                    case 3: c->x = selmon->wx + selmon->ww - WIDTH(c) - gappo; c->y = selmon->wy + gappo; break; // 右上
+                    case 4: c->x = selmon->wx + gappo; c->y = selmon->wy + (selmon->wh - HEIGHT(c)) / 2; break; // 左中
+                    case 0: // 默认0，居中
+                    case 5: c->x = selmon->wx + (selmon->ww - WIDTH(c)) / 2; c->y = selmon->wy + (selmon->wh - HEIGHT(c)) / 2; break; // 中中
+                    case 6: c->x = selmon->wx + selmon->ww - WIDTH(c) - gappo; c->y = selmon->wy + (selmon->wh - HEIGHT(c)) / 2; break; // 右中
+                    case 7: c->x = selmon->wx + gappo; c->y = selmon->wy + selmon->wh - HEIGHT(c) - gappo; break; // 左下
+                    case 8: c->x = selmon->wx + (selmon->ww - WIDTH(c)) / 2; c->y = selmon->wy + selmon->wh - HEIGHT(c) - gappo; break; // 中下
+                    case 9: c->x = selmon->wx + selmon->ww - WIDTH(c) - gappo; c->y = selmon->wy + selmon->wh - HEIGHT(c) - gappo; break; // 右下
+                }
+            }
+            break; // 有且只会匹配一个第一个符合的rule
         }
     }
-    if (!strcmp(c->name, scratchpadname)) {
+    if (!strcmp(c->name, scratchpadname) || !strcmp(class, scratchpadname) || !strcmp(instance, scratchpadname)) {
         c->isscratchpad = 1;
+        c->isfloating = 1;
         c->isglobal = 1; // scratchpad is default global
     }
     if (ch.res_class)
@@ -1729,7 +1748,7 @@ manage(Window w, XWindowAttributes *wa)
                 && (c->x + (c->w / 2) < c->mon->wx + c->mon->ww)) ? bh : c->mon->my);
 
     if (c->isfloating) {
-        if (wa->x==0 && wa->y==0) {
+        if (c->x==0 && c->y==0) {
             c->x = selmon->wx + (selmon->ww - c->w) / 2;
             c->y = selmon->wy + (selmon->wh - c->h) / 2;
         }
@@ -2827,6 +2846,25 @@ toggleglobal(const Arg *arg)
         return;
     selmon->sel->isglobal ^= 1;
     selmon->sel->tags = selmon->sel->isglobal ? TAGMASK : selmon->tagset[selmon->seltags];
+    focus(NULL);
+}
+
+void
+toggleborder(const Arg *arg)
+{
+    if (!selmon->sel)
+        return;
+    selmon->sel->isnoborder ^= 1;
+    selmon->sel->bw = selmon->sel->isnoborder ? 0 : borderpx;
+    int diff = (selmon->sel->isnoborder ? -1 : 1) * borderpx;
+    // TODO: 当有动画效果时 会有闪烁问题
+    resizeclient(
+        selmon->sel,
+        selmon->sel->x - diff,
+        selmon->sel->y - diff,
+        selmon->sel->w,
+        selmon->sel->h
+    );
     focus(NULL);
 }
 
