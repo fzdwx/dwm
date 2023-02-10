@@ -60,27 +60,43 @@ static const char *statusbarscript = "$DWM/statusbar/statusbar.sh";
 // 对应的tag序号以及快捷键:   0:1  1:2  2:3  3:4  4:5  5:c  6:m  7:6  8:9  9:0
 // 10:w 11:l
 static const char *tags[] = {"🤖", "", "", "", "", "", "", "", "ﭮ", "🐧", "﬐", ""};
+
+/* 自定义窗口显示规则 */
+/* class instance title 主要用于定位窗口适合哪个规则 */
+/* tags mask 定义符合该规则的窗口的tag 0 表示当前tag */
+/* isfloating 定义符合该规则的窗口是否浮动 */
+/* isglobal 定义符合该规则的窗口是否全局浮动 */
+/* isnoborder 定义符合该规则的窗口是否无边框 */
+/* monitor 定义符合该规则的窗口显示在哪个显示器上 -1 为当前屏幕 */
+/* floatposition 定义符合该规则的窗口显示的位置 0 中间，1到9分别为9宫格位置，例如1左上，9右下，3右上 */
 static const Rule rules[] = {
-    /* class                 instance              title             tags mask     isfloating  isglobal    isnoborder monitor */
-    {"chrome",               NULL,                 NULL,             1 << 5,       0,          0,          0,        -1 },
-    {"Chromium",             NULL,                 NULL,             1 << 5,       0,          0,          0,        -1 },
-    {"music",                NULL,                 NULL,             1 << 6,       1,          0,          1,        -1 },
-    {"TelegramDesktop",      NULL,                 NULL,             1 << 7,       0,          0,          0,        -1 },
-    { NULL,                 "qq",                  NULL,             1 << 9,       0,          0,          1,        -1 },
-    { NULL,                 "wechat.exe",          NULL,             1 << 10,      0,          0,          0,        -1 },
-    { NULL,                 "wxwork.exe",          NULL,             1 << 11,      0,          0,          0,        -1 },
-    { NULL,                  NULL,                "broken",          0,            1,          0,          0,        -1 },
-    { NULL,                  NULL,                "图片查看",         0,            1,          0,          0,        -1 },
-    { NULL,                  NULL,                "图片预览",         0,            1,          0,          0,        -1 },
-    { NULL,                  NULL,                "crx_",            0,            1,          0,          0,        -1 },
-    {"flameshot",            NULL,                 NULL,             0,            1,          0,          0,        -1 },
-    {"wemeetapp",            NULL,                 NULL,             TAGMASK,      1,          1,          0,        -1 }, // 腾讯会议在切换tag时有诡异bug导致退出 变成global来规避该问题
-    {"float",                NULL,                 NULL,             0,            1,          0,          0,        -1 }, // 特殊class client默认浮动
-    {"noborder",             NULL,                 NULL,             0,            1,          0,          1,        -1 }, // 特殊class client默认无边框
-    {"global",               NULL,                 NULL,             TAGMASK,      1,          1,          0,        -1 }, // 特殊class client全局于所有tag
+    {"chrome",               NULL,                 NULL,             1 << 5,       0,          0,          0,        -1,      0  },
+    {"Chromium",             NULL,                 NULL,             1 << 5,       0,          0,          0,        -1,      0  },
+    {"music",                NULL,                 NULL,             1 << 6,       1,          0,          1,        -1,      0  },
+    {"TelegramDesktop",      NULL,                 NULL,             1 << 7,       0,          0,          0,        -1,      0  },
+    { NULL,                 "qq",                  NULL,             1 << 9,       0,          0,          1,        -1,      0  },
+    { NULL,                 "wechat.exe",          NULL,             1 << 10,      0,          0,          0,        -1,      0  },
+    { NULL,                 "wxwork.exe",          NULL,             1 << 11,      0,          0,          0,        -1,      0  },
+    { NULL,                  NULL,                "broken",          0,            1,          0,          0,        -1,      0  },
+    { NULL,                  NULL,                "图片查看",         0,            1,          0,          0,        -1,      0  },
+    { NULL,                  NULL,                "图片预览",         0,            1,          0,          0,        -1,      0  },
+    { NULL,                  NULL,                "crx_",            0,            1,          0,          0,        -1,      0  },
+    {"flameshot",            NULL,                 NULL,             0,            1,          0,          0,        -1,      0  },
+    {"wemeetapp",            NULL,                 NULL,             TAGMASK,      1,          1,          0,        -1,      0  }, // 腾讯会议在切换tag时有诡异bug导致退出 变成global来规避该问题
+
+   /** 部分特殊class的规则 */
+    {"float",                NULL,                 NULL,             0,            1,          0,          0,        -1,      0}, // 浮动
+    {"global",               NULL,                 NULL,             TAGMASK,      0,          1,          0,        -1,      0}, // 全局
+    {"noborder",             NULL,                 NULL,             0,            0,          0,          1,        -1,      0}, // 无边框
+    {"FGN",                  NULL,                 NULL,             TAGMASK,      1,          1,          1,        -1,      0}, // 浮动 + 全局 + 无边框
+    {"FG",                   NULL,                 NULL,             TAGMASK,      1,          1,          0,        -1,      0}, // 浮动 + 全局
+    {"FN",                   NULL,                 NULL,             0,            1,          0,          1,        -1,      0}, // 浮动 + 无边框
+    {"GN",                   NULL,                 NULL,             TAGMASK,      0,          1,          1,        -1,      0}, // 全局 + 无边框
+    {"frt",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      3}, // 浮动 + 无边框 + 右上
+
 };
 static const char *overviewtag = "OVERVIEW";
-static const Layout overviewlayout = { "舘",  overview };
+static const Layout overviewlayout = { "",  overview };
 
 /* 自定义布局 */
 static const Layout layouts[] = {
