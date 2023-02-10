@@ -14,7 +14,7 @@ update(){
 }
 
 click() {
-    wezterm start --class noborder ranger
+    wezterm start --class FN ranger
  }
 
 case "$1" in

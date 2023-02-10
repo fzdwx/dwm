@@ -92,7 +92,15 @@ static const Rule rules[] = {
     {"FG",                   NULL,                 NULL,             TAGMASK,      1,          1,          0,        -1,      0}, // 浮动 + 全局
     {"FN",                   NULL,                 NULL,             0,            1,          0,          1,        -1,      0}, // 浮动 + 无边框
     {"GN",                   NULL,                 NULL,             TAGMASK,      0,          1,          1,        -1,      0}, // 全局 + 无边框
+    {"fr1",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      1}, // 浮动 + 无边框
+    {"fr2",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      2}, // 浮动 + 无边框
     {"frt",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      3}, // 浮动 + 无边框 + 右上
+    {"fr4",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      4}, // 浮动 + 无边框
+    {"fr5",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      5}, // 浮动 + 无边框
+    {"fr6",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      6}, // 浮动 + 无边框
+    {"fr7",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      7}, // 浮动 + 无边框
+    {"fr8",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      8}, // 浮动 + 无边框
+    {"fr9",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      9}, // 浮动 + 无边框
 
 };
 static const char *overviewtag = "OVERVIEW";

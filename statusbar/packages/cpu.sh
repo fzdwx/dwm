@@ -25,7 +25,7 @@ notify() {
 }
 
 call_btop() {
- wezterm start --class noborder btop
+ wezterm start --class frt btop
 }
 
 click() {
