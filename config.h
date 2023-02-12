@@ -177,8 +177,8 @@ static Key keys[] = {
     { MODKEY|Mod1Mask,     XK_Right,        resizewin,        {.ui = H_EXPAND} },        /* super alt right    |  调整窗口 */
 
     /* spawn + SHCMD 执行对应命令(已下部分建议完全自己重新定义) */
-    { MODKEY|ShiftMask,        XK_Return, spawn, SHCMD("wezterm") },                                                    /* super enter      | 打开st终端                   */
-    { MODKEY,                  XK_minus,  spawn, SHCMD("wezterm start --class float") },                                /* super -          | 打开浮动st终端               */
+    { MODKEY|ShiftMask,        XK_Return, spawn, SHCMD("st") },                                                    /* super enter      | 打开st终端                   */
+    { MODKEY,                  XK_minus,  spawn, SHCMD("st -c float") },                                /* super -          | 打开浮动st终端               */
     { Mod1Mask,                XK_space,  spawn, SHCMD("rofi -show window  -icon-theme Papirus -show-icons") },         /* alt space        | rofi: 窗口选择             */
     { MODKEY,                  XK_F1,     spawn, SHCMD("pcmanfm") },                                                    /* super F1         | 文件管理器                */
     { ControlMask|Mod1Mask,    XK_a,      spawn, SHCMD("flameshot gui") },                                              /* super shift a    | 截图                    */
