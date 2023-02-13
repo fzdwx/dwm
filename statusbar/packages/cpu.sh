@@ -11,7 +11,7 @@ signal=$(echo "^s$this^" | sed 's/_//')
 update() {
     cpu_icon="🧠"
     cpu_text=$(top -n 1 -b | sed -n '3p' | awk '{printf "%02d%", 100 - $8}')
-    temp_text=$(sensors | grep Tctl | awk '{printf "%d°C", $2}')  
+    temp_text=$(sensors | grep Tctl | awk '{printf "%d°C", $2}')
 
     icon=" $cpu_icon "
     text=" $cpu_text $temp_text "
@@ -25,7 +25,7 @@ notify() {
 }
 
 call_btop() {
- wezterm start --class frt btop
+ st -c frt btop
 }
 
 click() {

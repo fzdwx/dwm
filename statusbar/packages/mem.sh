@@ -35,7 +35,7 @@ swap:\t $(echo "$free_result" | sed -n 3p | awk '{print $3}')/$(echo "$free_resu
 }
 
 call_btop() {
-  wezterm start --class frt btm
+  st -c frt btm
 }
 
 click() {
