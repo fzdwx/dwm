@@ -70,37 +70,39 @@ static const char *tags[] = {"🤖", "", "", "", "", "", "", "
 /* monitor 定义符合该规则的窗口显示在哪个显示器上 -1 为当前屏幕 */
 /* floatposition 定义符合该规则的窗口显示的位置 0 中间，1到9分别为9宫格位置，例如1左上，9右下，3右上 */
 static const Rule rules[] = {
-    {"chrome",               NULL,                 NULL,             1 << 5,       0,          0,          0,        -1,      0  },
-    {"Chromium",             NULL,                 NULL,             1 << 5,       0,          0,          0,        -1,      0  },
-    {"music",                NULL,                 NULL,             1 << 6,       1,          0,          1,        -1,      0  },
-    {"TelegramDesktop",      NULL,                 NULL,             1 << 7,       0,          0,          0,        -1,      0  },
-    { NULL,                 "qq",                  NULL,             1 << 9,       0,          0,          1,        -1,      0  },
-    { NULL,                 "wechat.exe",          NULL,             1 << 10,      0,          0,          0,        -1,      0  },
-    { NULL,                 "wxwork.exe",          NULL,             1 << 11,      0,          0,          0,        -1,      0  },
-    { NULL,                  NULL,                "broken",          0,            1,          0,          0,        -1,      0  },
-    { NULL,                  NULL,                "图片查看",         0,            1,          0,          0,        -1,      0  },
-    { NULL,                  NULL,                "图片预览",         0,            1,          0,          0,        -1,      0  },
-    { NULL,                  NULL,                "crx_",            0,            1,          0,          0,        -1,      0  },
-    {"flameshot",            NULL,                 NULL,             0,            1,          0,          0,        -1,      0  },
-    {"wemeetapp",            NULL,                 NULL,             TAGMASK,      1,          1,          0,        -1,      0  }, // 腾讯会议在切换tag时有诡异bug导致退出 变成global来规避该问题
+    {"chrome", NULL, NULL, 1 << 5, 0, 0, 0, -1, 0},
+    {"Chromium", NULL, NULL, 1 << 5, 0, 0, 0, -1, 0},
+    {"music", NULL, NULL, 1 << 6, 1, 0, 1, -1, 0},
+    {"TelegramDesktop", NULL, NULL, 1 << 7, 0, 0, 0, -1, 0},
+    {NULL, "qq", NULL, 1 << 9, 0, 0, 1, -1, 0},
+    {NULL, "wechat.exe", NULL, 1 << 10, 0, 0, 0, -1, 0},
+    {NULL, "wxwork.exe", NULL, 1 << 11, 0, 0, 0, -1, 0},
+    {NULL, NULL, "broken", 0, 1, 0, 0, -1, 0},
+    {NULL, NULL, "图片查看", 0, 1, 0, 0, -1, 0},
+    {NULL, NULL, "图片预览", 0, 1, 0, 0, -1, 0},
+    {NULL, NULL, "crx_", 0, 1, 0, 0, -1, 0},
+    {"flameshot", NULL, NULL, 0, 1, 0, 0, -1, 0},
+    {"wemeetapp", NULL, NULL, TAGMASK, 1, 1, 0, -1,
+     0}, // 腾讯会议在切换tag时有诡异bug导致退出 变成global来规避该问题
 
-   /** 部分特殊class的规则 */
-    {"float",                NULL,                 NULL,             0,            1,          0,          0,        -1,      0}, // 浮动
-    {"global",               NULL,                 NULL,             TAGMASK,      0,          1,          0,        -1,      0}, // 全局
-    {"noborder",             NULL,                 NULL,             0,            0,          0,          1,        -1,      0}, // 无边框
-    {"FGN",                  NULL,                 NULL,             TAGMASK,      1,          1,          1,        -1,      0}, // 浮动 + 全局 + 无边框
-    {"FG",                   NULL,                 NULL,             TAGMASK,      1,          1,          0,        -1,      0}, // 浮动 + 全局
-    {"FN",                   NULL,                 NULL,             0,            1,          0,          1,        -1,      0}, // 浮动 + 无边框
-    {"GN",                   NULL,                 NULL,             TAGMASK,      0,          1,          1,        -1,      0}, // 全局 + 无边框
-    {"fr1",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      1}, // 浮动 + 无边框
-    {"fr2",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      2}, // 浮动 + 无边框
-    {"frt",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      3}, // 浮动 + 无边框 + 右上
-    {"fr4",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      4}, // 浮动 + 无边框
-    {"fr5",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      5}, // 浮动 + 无边框
-    {"fr6",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      6}, // 浮动 + 无边框
-    {"fr7",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      7}, // 浮动 + 无边框
-    {"fr8",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      8}, // 浮动 + 无边框
-    {"fr9",                  NULL,                 NULL,             0,            1,          0,          1,        -1,      9}, // 浮动 + 无边框
+    /** 部分特殊class的规则 */
+    {"float", NULL, NULL, 0, 1, 0, 0, -1, 0},        // 浮动
+    {"code", NULL, NULL, 0, 1, 0, 0, -1, 0},         // 浮动
+    {"global", NULL, NULL, TAGMASK, 0, 1, 0, -1, 0}, // 全局
+    {"noborder", NULL, NULL, 0, 0, 0, 1, -1, 0},     // 无边框
+    {"FGN", NULL, NULL, TAGMASK, 1, 1, 1, -1, 0}, // 浮动 + 全局 + 无边框
+    {"FG", NULL, NULL, TAGMASK, 1, 1, 0, -1, 0},  // 浮动 + 全局
+    {"FN", NULL, NULL, 0, 1, 0, 1, -1, 0},        // 浮动 + 无边框
+    {"GN", NULL, NULL, TAGMASK, 0, 1, 1, -1, 0},  // 全局 + 无边框
+    {"fr1", NULL, NULL, 0, 1, 0, 1, -1, 1},       // 浮动 + 无边框
+    {"fr2", NULL, NULL, 0, 1, 0, 1, -1, 2},       // 浮动 + 无边框
+    {"frt", NULL, NULL, 0, 1, 0, 1, -1, 3},       // 浮动 + 无边框 + 右上
+    {"fr4", NULL, NULL, 0, 1, 0, 1, -1, 4},       // 浮动 + 无边框
+    {"fr5", NULL, NULL, 0, 1, 0, 1, -1, 5},       // 浮动 + 无边框
+    {"fr6", NULL, NULL, 0, 1, 0, 1, -1, 6},       // 浮动 + 无边框
+    {"fr7", NULL, NULL, 0, 1, 0, 1, -1, 7},       // 浮动 + 无边框
+    {"fr8", NULL, NULL, 0, 1, 0, 1, -1, 8},       // 浮动 + 无边框
+    {"fr9", NULL, NULL, 0, 1, 0, 1, -1, 9},       // 浮动 + 无边框
 
 };
 static const char *overviewtag = "OVERVIEW";

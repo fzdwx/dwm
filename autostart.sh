@@ -22,6 +22,7 @@ daemons() {
     # picom --experimental-backends --config $DWM/conf/picom.conf >> /dev/null 2>&1 & # 开启picom
     picom --experimental-backends >> /dev/null 2>&1 & # 开启picom
     /opt/clash/cfw &
+    fanyi -p=google --show=alt+s &
     feh --randomize --bg-fill ~/Pictures/bg/*
 #    resetDns
 }
