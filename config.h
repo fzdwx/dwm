@@ -218,8 +218,6 @@ static Key keys[] = {
     TAGKEYS(XK_8, 7,  "telegram-desktop")
     TAGKEYS(XK_9, 8,  "discord")
     TAGKEYS(XK_0, 9,  "linuxqq")
-    TAGKEYS(XK_w, 10, "/opt/apps/com.qq.weixin.deepin/files/run.sh")
-    TAGKEYS(XK_l, 11, "/opt/apps/com.qq.weixin.work.deepin/files/run.sh")
 };
 static Button buttons[] = {
     /* click               event mask       button            function       argument  */
