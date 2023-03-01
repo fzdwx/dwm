@@ -24,6 +24,7 @@ daemons() {
     /opt/clash/cfw &
     fanyi -p=google --show=alt+s &
     feh --randomize --bg-fill ~/Pictures/bg/*
+    cher &
 #    resetDns
 }
 

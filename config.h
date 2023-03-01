@@ -91,9 +91,12 @@ static const Rule rules[] = {
 
     /** 部分特殊class的规则 */
     {"float", NULL, NULL, 0, 1, 0, 0, -1, 0},        // 浮动
-    {"code", NULL, NULL, 0, 1, 0, 0, -1, 0},         // 浮动
     {"global", NULL, NULL, TAGMASK, 0, 1, 0, -1, 0}, // 全局
     {"noborder", NULL, NULL, 0, 0, 0, 1, -1, 0},     // 无边框
+    {"code", NULL, NULL, 0, 0, 0, 1, -1, 0},         // 无边框
+    {"Code", NULL, NULL, 0, 0, 0, 1, -1, 0},         // 无边框
+    {"cher", NULL, NULL, 0, 0, 0, 1, -1, 0},         // 无边框
+    {"Cher", NULL, NULL, 0, 0, 0, 1, -1, 0},         // 无边框
     {"FGN", NULL, NULL, TAGMASK, 1, 1, 1, -1, 0}, // 浮动 + 全局 + 无边框
     {"FG", NULL, NULL, TAGMASK, 1, 1, 0, -1, 0},  // 浮动 + 全局
     {"FN", NULL, NULL, 0, 1, 0, 1, -1, 0},        // 浮动 + 无边框
@@ -311,12 +314,10 @@ static Key
                 {MODKEY, XK_minus, spawn,
                  SHCMD("wezterm start --class FN")}, /* super -          |
                                                         打开浮动st终端 */
-                {
+               /* {
                     Mod1Mask, XK_space, spawn,
                     SHCMD("rofi -show window  -icon-theme Papirus "
-                          "-show-icons")}, /* alt space |
-                                              rofi:
-                                              窗口选择 */
+                          "-show-icons")}, */
                 {MODKEY, XK_F1, spawn,
                  SHCMD("pcmanfm")}, /* super F1         | 文件管理器 */
                 {ControlMask | Mod1Mask, XK_a, spawn,
