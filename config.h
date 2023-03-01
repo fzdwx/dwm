@@ -136,6 +136,7 @@ static Key keys[] = {
     { MODKEY,              XK_equal,        togglesystray,    {0} },                     /* super +            |  切换 托盘栏显示状态 */
 
     { MODKEY,              XK_Tab,          focusstack,       {.i = +1} },               /* super tab          |  本tag内切换聚焦窗口 */
+    { MODKEY|ShiftMask,    XK_Tab,          focusstack,       {.i = -1} },               /* super shift tab    |  本tag内切换聚焦窗口 */
     { MODKEY,              XK_Up,           focusstack,       {.i = -1} },               /* super up           |  本tag内切换聚焦窗口 */
     { MODKEY,              XK_Down,         focusstack,       {.i = +1} },               /* super down         |  本tag内切换聚焦窗口 */
 
@@ -185,10 +186,19 @@ static Key keys[] = {
     { MODKEY|Mod1Mask,     XK_Left,         resizewin,        {.ui = H_REDUCE} },        /* super alt left     |  调整窗口 */
     { MODKEY|Mod1Mask,     XK_Right,        resizewin,        {.ui = H_EXPAND} },        /* super alt right    |  调整窗口 */
 
+  	{ MODKEY,              XK_k,            focusdir,         {.i = UP } },              /* super k            | 二维聚焦窗口 */
+  	{ MODKEY,              XK_j,            focusdir,         {.i = DOWN } },            /* super j            | 二维聚焦窗口 */
+  	{ MODKEY,              XK_h,            focusdir,         {.i = LEFT } },            /* super h            | 二维聚焦窗口 */
+  	{ MODKEY,              XK_l,            focusdir,         {.i = RIGHT } },           /* super l            | 二维聚焦窗口 */
+    { MODKEY|ShiftMask,    XK_k,            exchange_client,  {.i = UP } },              /* super shift k      | 二维交换窗口 (仅平铺) */
+    { MODKEY|ShiftMask,    XK_j,            exchange_client,  {.i = DOWN } },            /* super shift j      | 二维交换窗口 (仅平铺) */
+    { MODKEY|ShiftMask,    XK_h,            exchange_client,  {.i = LEFT} },             /* super shift h      | 二维交换窗口 (仅平铺) */
+    { MODKEY|ShiftMask,    XK_l,            exchange_client,  {.i = RIGHT } },           /* super shift l      | 二维交换窗口 (仅平铺) */
+
     /* spawn + SHCMD 执行对应命令(已下部分建议完全自己重新定义) */
     { MODKEY|ShiftMask,        XK_Return, spawn, SHCMD("wezterm") },                                                    /* super enter      | 打开st终端                */
     { MODKEY,                  XK_minus,  spawn, SHCMD("wezterm start --class FN") },                                   /* super -          | 打开浮动st终端             */
-    { Mod1Mask,                XK_space,  spawn, SHCMD("rofi -show window  -icon-theme Papirus -show-icons") },         /* alt space        | rofi: 窗口选择            */
+//    { Mod1Mask,                XK_space,  spawn, SHCMD("rofi -show window  -icon-theme Papirus -show-icons") },         /* alt space        | rofi: 窗口选择            */
     { MODKEY,                  XK_F1,     spawn, SHCMD("pcmanfm") },                                                    /* super F1         | 文件管理器                 */
     { ControlMask|Mod1Mask,    XK_a,      spawn, SHCMD("flameshot gui") },                                              /* super shift a    | 截图                      */
     { MODKEY|ShiftMask,        XK_q,      spawn, SHCMD("kill -9 $(xprop | grep _NET_WM_PID | awk '{print $3}')") },     /* super shift q    | 选中某个窗口并强制kill      */
