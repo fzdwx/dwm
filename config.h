@@ -2,7 +2,7 @@
 
 static int showsystray                    = 1;        /* 是否显示托盘栏 */
 static const int newclientathead          = 0;        /* 定义新窗口在栈顶还是栈底 */
-static const unsigned int borderpx        = 3;        /* 窗口边框大小 */
+static const unsigned int borderpx        = 2;        /* 窗口边框大小 */
 static const unsigned int systraypinning  = 1;        /* 托盘跟随的显示器 0代表不指定显示器 */
 static const unsigned int systrayspacing  = 1;        /* 托盘间距 */
 static const unsigned int systrayspadding = 5;        /* 托盘和状态栏的间隙 */
@@ -16,7 +16,7 @@ static const int overviewgappi            = 24;       /* overview时 窗口与�
 static const int overviewgappo            = 60;       /* overview时 窗口与窗口 缝隙大小 */
 static const int showbar                  = 1;        /* 是否显示状态栏 */
 static const int topbar                   = 1;        /* 指定状态栏位置 0底部 1顶部 */
-static const float mfact                  = 0.6;      /* 主工作区 大小比例 */
+static const float mfact                  = 0.5;      /* 主工作区 大小比例 */
 static const int nmaster                  = 1;        /* 主工作区 窗口数量 */
 static const unsigned int snap            = 10;       /* 边缘依附宽度 */
 static const unsigned int baralpha        = 0xc0;     /* 状态栏透明度 */
@@ -62,8 +62,7 @@ static const char *statusbarscript = "$DWM/statusbar/statusbar.sh";
 //            ﮸  ﭮ 切
 // 对应的tag序号以及快捷键:   0:1  1:2  2:3  3:4  4:5  5:c  6:m  7:6  8:9  9:0
 // 10:w 11:l
-static const char *tags[] = {"🤖",   "", "", "", "", "",
-                             "", "", "ﭮ",   "🐧",   "﬐", ""};
+static const char *tags[] = {"", "", "", "", "", "", "", "", "", "", "", "﮸"};
 
 /* 自定义窗口显示规则 */
 /* class instance title 主要用于定位窗口适合哪个规则 */
@@ -75,20 +74,6 @@ static const char *tags[] = {"🤖",   "", "", "", "", "",
 /* floatposition 定义符合该规则的窗口显示的位置 0
  * 中间，1到9分别为9宫格位置，例如1左上，9右下，3右上 */
 static const Rule rules[] = {
-    {"chrome", NULL, NULL, 1 << 5, 0, 0, 0, -1, 0},
-    {"Chromium", NULL, NULL, 1 << 5, 0, 0, 0, -1, 0},
-    {"music", NULL, NULL, 1 << 6, 1, 0, 1, -1, 0},
-    {"TelegramDesktop", NULL, NULL, 1 << 7, 0, 0, 0, -1, 0},
-    {NULL, "qq", NULL, 1 << 9, 0, 0, 1, -1, 0},
-    {NULL, "wechat.exe", NULL, 1 << 10, 0, 0, 0, -1, 0},
-    {NULL, "wxwork.exe", NULL, 1 << 11, 0, 0, 0, -1, 0},
-    {NULL, NULL, "broken", 0, 1, 0, 0, -1, 0},
-    {NULL, NULL, "图片查看", 0, 1, 0, 0, -1, 0},
-    {NULL, NULL, "图片预览", 0, 1, 0, 0, -1, 0},
-    {NULL, NULL, "crx_", 0, 1, 0, 0, -1, 0},
-    {"flameshot", NULL, NULL, 0, 1, 0, 0, -1, 0},
-    {"wemeetapp", NULL, NULL, TAGMASK, 1, 1, 0, -1,
-     0}, // 腾讯会议在切换tag时有诡异bug导致退出 变成global来规避该问题
 
     /** 部分特殊class的规则 */
     {"float", NULL, NULL, 0, 1, 0, 0, -1, 0},        // 浮动
