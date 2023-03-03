@@ -2,7 +2,7 @@
 
 static int showsystray                    = 1;        /* 是否显示托盘栏 */
 static const int newclientathead          = 0;        /* 定义新窗口在栈顶还是栈底 */
-static const unsigned int borderpx        = 2;        /* 窗口边框大小 */
+static const unsigned int borderpx        = 3;        /* 窗口边框大小 */
 static const unsigned int systraypinning  = 1;        /* 托盘跟随的显示器 0代表不指定显示器 */
 static const unsigned int systrayspacing  = 1;        /* 托盘间距 */
 static const unsigned int systrayspadding = 5;        /* 托盘和状态栏的间隙 */
@@ -28,8 +28,8 @@ static const char *fonts[] = {
 
 static const char *colors[][3] = {
     /* 颜色设置 ColFg, ColBg, ColBorder */
-    [SchemeNorm] = {"#bbbbbb", "#333333", "#a277ff"},
-    [SchemeSel] = {"#ffffff", "#37474F", "#a277ff"},
+    [SchemeNorm] = {"#ffffff", "#333333", "#444444"},
+    [SchemeSel] = {"#ffffff", "#37474F", "#61ffca"},
     [SchemeSelGlobal] = {"#ffffff", "#37474F", "#61ffca"},
     [SchemeHid] = {"#dddddd", NULL, NULL},
     [SchemeSystray] = {NULL, "#7799AA", NULL},
@@ -191,10 +191,10 @@ static Key keys[] = {
   	{ MODKEY,                  XK_j,            focusdir,         {.i = DOWN } },            /* super j            | 二维聚焦窗口 */
   	{ MODKEY,                  XK_h,            focusdir,         {.i = LEFT } },            /* super h            | 二维聚焦窗口 */
   	{ MODKEY,                  XK_l,            focusdir,         {.i = RIGHT } },           /* super l            | 二维聚焦窗口 */
-    { ControlMask|Mod1Mask,    XK_k,            exchange_client,  {.i = UP } },              /* super shift k      | 二维交换窗口 (仅平铺) */
-    { ControlMask|Mod1Mask,    XK_j,            exchange_client,  {.i = DOWN } },            /* super shift j      | 二维交换窗口 (仅平铺) */
-    { ControlMask|Mod1Mask,    XK_h,            exchange_client,  {.i = LEFT} },             /* super shift h      | 二维交换窗口 (仅平铺) */
-    { ControlMask|Mod1Mask,    XK_l,            exchange_client,  {.i = RIGHT } },           /* super shift l      | 二维交换窗口 (仅平铺) */
+    { ControlMask|Mod1Mask,    XK_Up,           exchange_client,  {.i = UP } },              /* super shift k      | 二维交换窗口 (仅平铺) */
+    { ControlMask|Mod1Mask,    XK_Down,         exchange_client,  {.i = DOWN } },            /* super shift j      | 二维交换窗口 (仅平铺) */
+    { ControlMask|Mod1Mask,    XK_Left,         exchange_client,  {.i = LEFT} },             /* super shift h      | 二维交换窗口 (仅平铺) */
+    { ControlMask|Mod1Mask,    XK_Right,        exchange_client,  {.i = RIGHT } },           /* super shift l      | 二维交换窗口 (仅平铺) */
 
     /* spawn + SHCMD 执行对应命令(已下部分建议完全自己重新定义) */
     { MODKEY|ShiftMask,        XK_Return, spawn, SHCMD("wezterm") },                                                    /* super enter      | 打开st终端                */
