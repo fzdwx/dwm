@@ -6,28 +6,26 @@
 source ~/.profile
 
 settings() {
-    [ $1 ] && sleep $1
-#    xset -b                                   # 关闭蜂鸣器
-#    syndaemon -i 1 -t -K -R -d                # 设置使用键盘时触控板短暂失效
-#    ~/scripts/set_screen.sh two               # 设置显示器
-    xrandr --output eDP-1-1 --auto --left-of HDMI-0
+	[ $1 ] && sleep $1
+	#    xset -b                                   # 关闭蜂鸣器
+	#    syndaemon -i 1 -t -K -R -d                # 设置使用键盘时触控板短暂失效
+	#    ~/scripts/set_screen.sh two               # 设置显示器
+	xrandr --output eDP-1-1 --auto --left-of HDMI-0
 }
 
 daemons() {
-    [ $1 ] && sleep $1
-    $DWM/statusbar/statusbar.sh cron &        # 开启状态栏定时更新
-    fcitx5 &                                 # 开启输入法
-    flameshot &                               # 截图要跑一个程序在后台 不然无法将截图保存到剪贴板
-    dunst -conf $DWM/conf/dunst.conf & # 开启通知server
-    # picom --experimental-backends --config $DWM/conf/picom.conf >> /dev/null 2>&1 & # 开启picom
-    picom --experimental-backends >> /dev/null 2>&1 & # 开启picom
-    /opt/clash/cfw &
-    fanyi -p=google --show=alt+s &
-    feh --randomize --bg-fill ~/Pictures/bg/*
-    utools &
-#    resetDns
+	[ $1 ] && sleep $1
+	$DWM/statusbar/statusbar.sh cron &                                             # 开启状态栏定时更新
+	fcitx5 &                                                                       # 开启输入法
+	flameshot &                                                                    # 截图要跑一个程序在后台 不然无法将截图保存到剪贴板
+	dunst -conf $DWM/conf/dunst.conf &                                             # 开启通知server
+	picom --experimental-backends --config $DWM/conf/picom.conf >>/dev/null 2>&1 & # 开启picom
+	/opt/clash/cfw &
+	popup-translation &
+	feh --randomize --bg-fill ~/Pictures/bg/*
+	utools &
+	#    resetDns
 }
 
-
-settings 1 &                                  # 初始化设置项
-daemons 3 &                                   # 后台程序项
+settings 1 & # 初始化设置项
+daemons 3 &  # 后台程序项

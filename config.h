@@ -86,6 +86,7 @@ static const Rule rules[] = {
     {"FGN", NULL, NULL, TAGMASK, 1, 1, 1, -1, 0}, // 浮动 + 全局 + 无边框
     {"FG", NULL, NULL, TAGMASK, 1, 1, 0, -1, 0},  // 浮动 + 全局
     {"FN", NULL, NULL, 0, 1, 0, 1, -1, 0},        // 浮动 + 无边框
+    {"WEZTERMFN", NULL, NULL, 0, 1, 0, 1, -1, 0},        // 浮动 + 无边框
     {"GN", NULL, NULL, TAGMASK, 0, 1, 1, -1, 0},  // 全局 + 无边框
     {"fr1", NULL, NULL, 0, 1, 0, 1, -1, 1},       // 浮动 + 无边框
     {"fr2", NULL, NULL, 0, 1, 0, 1, -1, 2},       // 浮动 + 无边框
@@ -176,14 +177,14 @@ static Key keys[] = {
   	{ MODKEY,                  XK_j,            focusdir,         {.i = DOWN } },            /* super j            | 二维聚焦窗口 */
   	{ MODKEY,                  XK_h,            focusdir,         {.i = LEFT } },            /* super h            | 二维聚焦窗口 */
   	{ MODKEY,                  XK_l,            focusdir,         {.i = RIGHT } },           /* super l            | 二维聚焦窗口 */
-    { ControlMask|Mod1Mask,    XK_Up,           exchange_client,  {.i = UP } },              /* super shift k      | 二维交换窗口 (仅平铺) */
-    { ControlMask|Mod1Mask,    XK_Down,         exchange_client,  {.i = DOWN } },            /* super shift j      | 二维交换窗口 (仅平铺) */
-    { ControlMask|Mod1Mask,    XK_Left,         exchange_client,  {.i = LEFT} },             /* super shift h      | 二维交换窗口 (仅平铺) */
-    { ControlMask|Mod1Mask,    XK_Right,        exchange_client,  {.i = RIGHT } },           /* super shift l      | 二维交换窗口 (仅平铺) */
+    { ShiftMask|Mod1Mask,    XK_Up,             exchange_client,  {.i = UP } },              /* super shift Up     | 二维交换窗口 (仅平铺) */
+    { ShiftMask|Mod1Mask,    XK_Down,           exchange_client,  {.i = DOWN } },            /* super shift Down   | 二维交换窗口 (仅平铺) */
+    { ShiftMask|Mod1Mask,    XK_Left,           exchange_client,  {.i = LEFT} },             /* super shift Left   | 二维交换窗口 (仅平铺) */
+    { ShiftMask|Mod1Mask,    XK_Right,          exchange_client,  {.i = RIGHT } },           /* super shift Right  | 二维交换窗口 (仅平铺) */
 
     /* spawn + SHCMD 执行对应命令(已下部分建议完全自己重新定义) */
     { MODKEY|ShiftMask,        XK_Return, spawn, SHCMD("wezterm") },                                                    /* super enter      | 打开st终端                */
-    { MODKEY,                  XK_minus,  spawn, SHCMD("wezterm start --class FN") },                                   /* super -          | 打开浮动st终端             */
+    { MODKEY,                  XK_minus,  spawn, SHCMD("wezterm start --class WEZTERMFN") },                                   /* super -          | 打开浮动st终端             */
     { Mod1Mask,                XK_space,  spawn, SHCMD("rofi -show window  -icon-theme Papirus -show-icons") },         /* alt space        | rofi: 窗口选择            */
     { MODKEY,                  XK_F1,     spawn, SHCMD("pcmanfm") },                                                    /* super F1         | 文件管理器                 */
     { ControlMask|Mod1Mask,    XK_a,      spawn, SHCMD("flameshot gui") },                                              /* super shift a    | 截图                      */
