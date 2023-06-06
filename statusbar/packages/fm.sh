@@ -14,7 +14,7 @@ update(){
 }
 
 click() {
-    wezterm start --class FN ranger
+    wezterm start --class FN joshuto
  }
 
 case "$1" in

@@ -97,6 +97,7 @@ static const Rule rules[] = {
     {"fr7", NULL, NULL, 0, 1, 0, 1, -1, 7},       // 浮动 + 无边框
     {"fr8", NULL, NULL, 0, 1, 0, 1, -1, 8},       // 浮动 + 无边框
     {"fr9", NULL, NULL, 0, 1, 0, 1, -1, 9},       // 浮动 + 无边框
+    {"crx_ikhdkkncnoglghljlkmcimlnlhkeamad",NULL, NULL, 0, 1, 0, 0, -1, 0}
 
 };
 static const char *overviewtag = "OVERVIEW";

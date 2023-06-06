@@ -40,19 +40,23 @@ shadow-exclude = [
 ];
 
 # 透明
-active-opacity = 0.80;
+active-opacity = 0.93;
 opacity-rule = [
-    "100:_NET_WM_STATE@:32a *= '_NET_WM_STATE_FULLSCREEN'",
-    "100:_NET_WM_STATE@:32a *= '_NET_WM_STATE_STICKY'",
+    "100:_NET_WM_STATE@:32a *= '_NET_WM_STATE_STICKY'", # 画中画
+    "100:_NET_WM_STATE@:32a *= '_NET_WM_STATE_FULLSCREEN' && WM_CLASS@:s *= 'google-chrome'", # 全屏 chrome 窗口
+    "100:WM_NAME@:s = '画中画'",
     "100:WM_CLASS@:s *= 'vncviewer'",
     "100:class_g = 'mpv'",
     "100:class_g = 'obs'",
     "100:class_g = 'Gimp'",
+    "100:WM_CLASS:s *= 'google-chrome'",
+    "100:WM_CLASS:s *= 'firefox'",
+    "100:WM_CLASS:s *= 'Navigator'",
     "85:!focused",
 ];
 
 # 淡入淡出
-fading = false;
+fading = true;
 fade-delta = 2;
 fade-in-step = 0.01;
 fade-out-step = 0.01;
@@ -63,7 +67,7 @@ fade-exclude = [
 ];
 
 # 动画
-animations = false;
+animations = true;
 animation-window-mass = 0.5;
 animation-dampening = 16;
 animation-stiffness-in-tag = 125;
