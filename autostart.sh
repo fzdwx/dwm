@@ -10,7 +10,7 @@ settings() {
 	#    xset -b                                   # 关闭蜂鸣器
 	#    syndaemon -i 1 -t -K -R -d                # 设置使用键盘时触控板短暂失效
 	#    ~/scripts/set_screen.sh two               # 设置显示器
-	xrandr --output HDMI-1-0 --auto --left-of eDP-1
+	xrandr --output HDMI-1-0 --mode 1920x1080 --rate 144 --above eDP-1
 }
 
 daemons() {
@@ -21,7 +21,7 @@ daemons() {
 	ask server 1333 &                                                           # 截图要跑一个程序在后台 不然无法将截图保存到剪贴板
 	dunst -conf $DWM/conf/dunst.conf &                                             # 开启通知server
 	picom --config $DWM/conf/picom.conf.bak >>/dev/null 2>&1 & # 开启picom
-	launcher &
+	yakuza &
 	feh --randomize --bg-fill ~/Pictures/bg/*
 }
 

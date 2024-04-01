@@ -89,7 +89,8 @@ static const Rule rules[] = {
     {"WEZTERMFN", NULL, NULL, 0, 1, 0, 1, -1, 0},        // 浮动 + 无边框
     {"launcher-dev-linux-amd64", NULL, NULL, 0, 1, 0, 1, -1, 0},        // 浮动 + 无边框
     {"Launcher-dev-linux-amd64", NULL, NULL, 0, 1, 0, 1, -1, 0},        // 浮动 + 无边框
-    {"Launcher", NULL, NULL, 0, 1, 0, 1, -1, 0},        // 浮动 + 无边框
+    {"yakuza", NULL, NULL, 0, 1, 0, 1, -1, 0},        // 浮动 + 无边框
+    {"Yakuza", NULL, NULL, 0, 1, 0, 1, -1, 0},        // 浮动 + 无边框
     {"GN", NULL, NULL, TAGMASK, 0, 1, 1, -1, 0},  // 全局 + 无边框
     {"fr1", NULL, NULL, 0, 1, 0, 1, -1, 1},       // 浮动 + 无边框
     {"fr2", NULL, NULL, 0, 1, 0, 1, -1, 2},       // 浮动 + 无边框
@@ -189,7 +190,11 @@ static Key keys[] = {
     /* spawn + SHCMD 执行对应命令(已下部分建议完全自己重新定义) */
     { MODKEY|ShiftMask,        XK_Return, spawn, SHCMD("wezterm") },                                                    /* super enter      | 打开st终端                */
     { MODKEY,                  XK_minus,  spawn, SHCMD("wezterm start --class WEZTERMFN") },                                   /* super -          | 打开浮动st终端             */
-    // { Mod1Mask,                XK_space,  spawn, SHCMD("rofi -show window  -icon-theme Papirus -show-icons") },         /* alt space        | rofi: 窗口选择            */
+     /* spawn + SHCMD 执行对应命令(已下部分建议完全自己重新定义) */
+    /*{ MODKEY|ShiftMask,        XK_Return, spawn, SHCMD("kitty") },                                                    /* super enter      | 打开st终端                */
+    /*{ MODKEY,                  XK_minus,  spawn, SHCMD("kitty --class WEZTERMFN") },                                   /* super -          | 打开浮动st终端             */
+
+    { Mod1Mask,                XK_space,  spawn, SHCMD("yactrl bridge toggle") },         /* alt space        | rofi: 窗口选择            */
     { MODKEY,                  XK_F1,     spawn, SHCMD("pcmanfm") },                                                    /* super F1         | 文件管理器                 */
     { ControlMask|Mod1Mask,    XK_a,      spawn, SHCMD("flameshot gui") },                                              /* super shift a    | 截图                      */
     { MODKEY|ShiftMask,        XK_q,      spawn, SHCMD("kill -9 $(xprop | grep _NET_WM_PID | awk '{print $3}')") },     /* super shift q    | 选中某个窗口并强制kill      */
